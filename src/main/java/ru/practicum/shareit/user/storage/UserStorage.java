@@ -7,6 +7,7 @@ import java.util.Optional;
 
 public interface UserStorage {
     boolean isUserExist(long userId);
+
     boolean isEmailExist(String email);
 
     User save(User user);

@@ -6,7 +6,9 @@ import javax.validation.ValidationException;
 
 public class Validator {
 
-    private Validator() {}
+    private Validator() {
+
+    }
 
     public static void ifHasErrorsThrowValidationException(BindingResult br) {
         if (br.hasErrors()) {

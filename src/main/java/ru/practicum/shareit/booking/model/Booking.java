@@ -14,6 +14,7 @@ public class Booking {
     public enum Status {
         WAITING, APPROVED, REJECTED, CANCELED
     }
+
     private long id;
     private LocalDateTime start;
     private LocalDateTime end;
