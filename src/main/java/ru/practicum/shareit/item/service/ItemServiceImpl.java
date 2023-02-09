@@ -11,31 +11,32 @@ import ru.practicum.shareit.user.exception.UserNotFoundException;
 import ru.practicum.shareit.user.storage.UserStorage;
 
 import java.util.Collection;
+import java.util.function.Supplier;
 
 @Service
 @RequiredArgsConstructor
 public class ItemServiceImpl implements ItemService {
+    private static final String USER_NOT_FOUND_MSG = "Пользователь с id = %d не найден";
     private static final String ITEM_NOT_FOUND_MSG = "Вещь с id = %d не найдена";
     private final ItemStorage itemStorage;
     private final UserStorage userStorage;
 
-    private static final String USER_NOT_FOUND_MSG = "Пользователь с id = %d не найден";
-
     @Override
     public ItemDto add(long userId, Item item) {
-        if (userStorage.isUserExist(userId)) {
-            return ItemMapper.toItemDto(itemStorage.save(userId, item));
-        }
+        return getIfUserExists(userId, () -> ItemMapper.toItemDto(itemStorage.save(userId, item)));
+    }
 
-        throw new UserNotFoundException(String.format("Пользователь с id = %d не существует", userId));
+    private ItemDto getIfUserExists(long userId, Supplier<ItemDto> s) {
+        if (userStorage.isUserExist(userId)) {
+            return s.get();
+        }
+        throw new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId));
     }
 
     @Override
     public ItemDto updateById(long itemId, long userId, Item itemWithUpdates) {
-        if (userStorage.isUserExist(userId)) {
-            return ItemMapper.toItemDto(itemStorage.updateByItemId(itemId, userId, itemWithUpdates));
-        }
-        throw new UserNotFoundException(String.format("Пользователь с id = %d не существует", userId));
+        return getIfUserExists(userId,
+                () -> ItemMapper.toItemDto(itemStorage.updateByItemId(itemId, userId, itemWithUpdates)));
     }
 
     @Override

@@ -11,6 +11,7 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.storage.UserStorage;
 
 import java.util.Collection;
+import java.util.function.Supplier;
 
 @Slf4j
 @Service
@@ -22,22 +23,20 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto add(User user) {
-        String email = user.getEmail();
-        ifEmailExistsThrowEmailExistException(email);
-        return UserMapper.toUserDto(userStorage.save(user));
+        return getIfEmailNotExists(user.getEmail(), () -> UserMapper.toUserDto(userStorage.save(user)));
+    }
+
+    private UserDto getIfEmailNotExists(String email, Supplier<UserDto> s) {
+        if (!userStorage.isEmailExist(email)) {
+            return s.get();
+        }
+        throw new UserEmailAlreadyExist(String.format(EMAIL_EXISTS_MSG, email));
     }
 
     @Override
     public UserDto updateById(long userId, User userWithUpdates) {
-        String email = userWithUpdates.getEmail();
-        ifEmailExistsThrowEmailExistException(email);
-        return UserMapper.toUserDto(userStorage.updateById(userId, userWithUpdates));
-    }
-
-    private void ifEmailExistsThrowEmailExistException(String email) {
-        if (userStorage.isEmailExist(email)) {
-            throw new UserEmailAlreadyExist(String.format(EMAIL_EXISTS_MSG, email));
-        }
+        return getIfEmailNotExists(userWithUpdates.getEmail(),
+                () -> UserMapper.toUserDto(userStorage.updateById(userId, userWithUpdates)));
     }
 
     @Override

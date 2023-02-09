@@ -4,7 +4,7 @@ import ru.practicum.shareit.item.model.Item;
 
 import java.util.Collection;
 
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.toList;
 
 public class ItemMapper {
     private ItemMapper() {
