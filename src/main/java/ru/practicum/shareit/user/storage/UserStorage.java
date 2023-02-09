@@ -6,7 +6,7 @@ import java.util.Collection;
 import java.util.Optional;
 
 public interface UserStorage {
-    boolean isExist(long userId);
+    boolean isUserExist(long userId);
     boolean isEmailExist(String email);
 
     User save(User user);
@@ -17,5 +17,5 @@ public interface UserStorage {
 
     Collection<User> findAll();
 
-    void deleteById(long userId);
+    User deleteById(long userId);
 }

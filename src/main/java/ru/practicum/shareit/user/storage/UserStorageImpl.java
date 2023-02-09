@@ -12,11 +12,13 @@ import java.util.Optional;
 @Slf4j
 @Repository
 public class UserStorageImpl implements UserStorage {
-    public static final Map<Long, User> users = new HashMap<>();
+
+    //Т.к. нет БД данные о пользователях хранятся с статической переменной
+    private static final Map<Long, User> users = new HashMap<>();
     private long id;
 
     @Override
-    public boolean isExist(long userId) {
+    public boolean isUserExist(long userId) {
         return users.containsKey(userId);
     }
 
@@ -57,8 +59,8 @@ public class UserStorageImpl implements UserStorage {
     }
 
     @Override
-    public void deleteById(long userId) {
-        users.remove(userId);
+    public User deleteById(long userId) {
         log.info("Пользователь с id = {} удален", userId);
+        return users.remove(userId);
     }
 }

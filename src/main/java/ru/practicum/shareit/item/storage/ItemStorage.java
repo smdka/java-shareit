@@ -10,9 +10,9 @@ public interface ItemStorage {
 
     Item updateByItemId(long itemId, long userId, Item itemWithUpdates);
 
-    Optional<Item> findByItemId(long itemId, long userId);
+    Optional<Item> findByItemId(long itemId);
 
     Collection<Item> findByUserId(long userId);
 
-    Collection<Item> findByTextAndUserId(String text, long userId);
+    Collection<Item> findByTextAndUserId(String text);
 }

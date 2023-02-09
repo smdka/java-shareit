@@ -14,5 +14,5 @@ public interface ItemService {
 
     Collection<ItemDto> getByUserId(long userId);
 
-    Collection<ItemDto> findIfContainsTextInNameOrDescription(String text, long userId);
+    Collection<ItemDto> findIfContainsTextInNameOrDescription(String text);
 }
