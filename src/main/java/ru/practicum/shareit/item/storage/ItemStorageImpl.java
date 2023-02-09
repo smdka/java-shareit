@@ -2,6 +2,7 @@ package ru.practicum.shareit.item.storage;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
+import ru.practicum.shareit.item.exception.ItemNotFoundException;
 import ru.practicum.shareit.item.model.Item;
 
 import java.util.*;
@@ -28,7 +29,7 @@ public class ItemStorageImpl implements ItemStorage {
         Item item = itemsByUserId.stream()
                 .filter(i -> i.getId() == itemId)
                 .findFirst()
-                .orElseThrow();
+                .orElseThrow(() -> new ItemNotFoundException(String.format("Вещь с id = %d не существует",itemId)));
         item.updateFrom(itemWithUpdates);
         items.put(userId, itemsByUserId);
         log.info("Вещь с id = {} пользователя с id = {} обновлена", itemId, userId);
