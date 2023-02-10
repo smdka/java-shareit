@@ -12,9 +12,7 @@ import java.util.Optional;
 @Slf4j
 @Repository
 public class UserStorageImpl implements UserStorage {
-
-    //Т.к. нет БД данные о пользователях хранятся с статической переменной
-    private static final Map<Long, User> users = new HashMap<>();
+    private final Map<Long, User> users = new HashMap<>();
     private long id;
 
     @Override
