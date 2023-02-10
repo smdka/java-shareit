@@ -27,10 +27,10 @@ public class UserServiceImpl implements UserService {
     }
 
     private UserDto getIfEmailNotExists(String email, Supplier<UserDto> s) {
-        if (!userStorage.isEmailExist(email)) {
-            return s.get();
+        if (userStorage.isEmailExist(email)) {
+            throw new UserEmailAlreadyExist(String.format(EMAIL_EXISTS_MSG, email));
         }
-        throw new UserEmailAlreadyExist(String.format(EMAIL_EXISTS_MSG, email));
+        return s.get();
     }
 
     @Override

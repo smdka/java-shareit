@@ -6,9 +6,8 @@ import java.util.Collection;
 
 import static java.util.stream.Collectors.toList;
 
-public class ItemMapper {
+public final class ItemMapper {
     private ItemMapper() {
-
     }
 
     public static ItemDto toItemDto(Item item) {

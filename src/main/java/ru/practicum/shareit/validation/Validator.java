@@ -4,10 +4,9 @@ import org.springframework.validation.BindingResult;
 
 import javax.validation.ValidationException;
 
-public class Validator {
+public final class Validator {
 
     private Validator() {
-
     }
 
     public static void ifHasErrorsThrowValidationException(BindingResult br) {

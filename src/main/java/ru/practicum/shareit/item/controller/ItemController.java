@@ -13,9 +13,6 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.util.Collection;
 
-/**
- * TODO Sprint add-controllers.
- */
 @Slf4j
 @RestController
 @RequestMapping("/items")
@@ -49,14 +46,14 @@ public class ItemController {
     }
 
     @GetMapping
-    public Iterable<ItemDto> getByUserId(@NotNull @RequestHeader("X-Sharer-User-Id") Long userId) {
+    public Collection<ItemDto> getByUserId(@NotNull @RequestHeader("X-Sharer-User-Id") Long userId) {
         log.info("Получен запрос GET /items с заголовком X-Sharer-User-Id = {}", userId);
         return itemService.getByUserId(userId);
     }
 
     @GetMapping("/search")
     public Collection<ItemDto> search(@RequestParam String text,
-                                      @NotNull @RequestHeader("X-Sharer-User-Id") long userId) {
+                                      @NotNull @RequestHeader("X-Sharer-User-Id") Long userId) {
         log.info("Получен запрос GET /items/search?text={} с заголовком X-Sharer-User-Id = {}", text, userId);
         return itemService.findIfContainsTextInNameOrDescription(text);
     }

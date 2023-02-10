@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 import ru.practicum.shareit.item.exception.ItemNotFoundException;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.item.util.StringUtil;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -68,16 +69,9 @@ public class ItemStorageImpl implements ItemStorage {
                 Collections.emptyList() :
                 items.values().stream()
                         .flatMap(List::stream)
-                        .filter(item -> (isNameContains(text, item) || isDescriptionContains(text, item))
-                                && item.getAvailable())
+                        .filter(item -> (StringUtil.containsTextIgnoreCase(item.getName(), text) ||
+                                StringUtil.containsTextIgnoreCase(item.getDescription(), text)) &&
+                                item.getAvailable())
                         .collect(toList());
-    }
-
-    private boolean isDescriptionContains(String text, Item item) {
-        return item.getDescription().toLowerCase().contains(text.toLowerCase());
-    }
-
-    private boolean isNameContains(String text, Item item) {
-        return item.getName().toLowerCase().contains(text.toLowerCase());
     }
 }

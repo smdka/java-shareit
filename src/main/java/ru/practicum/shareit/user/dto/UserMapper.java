@@ -6,9 +6,8 @@ import java.util.Collection;
 
 import static java.util.stream.Collectors.toList;
 
-public class UserMapper {
+public final class UserMapper {
     private UserMapper() {
-
     }
 
     public static UserDto toUserDto(User user) {

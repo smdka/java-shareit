@@ -26,7 +26,7 @@ public class ItemServiceImpl implements ItemService {
         return getIfUserExists(userId, () -> ItemMapper.toItemDto(itemStorage.save(userId, item)));
     }
 
-    private ItemDto getIfUserExists(long userId, Supplier<ItemDto> s) {
+    private <T> T getIfUserExists(long userId, Supplier<T> s) {
         if (userStorage.isUserExist(userId)) {
             return s.get();
         }
@@ -47,10 +47,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public Collection<ItemDto> getByUserId(long userId) {
-        if (userStorage.isUserExist(userId)) {
-            return ItemMapper.toItemDto(itemStorage.findByUserId(userId));
-        }
-        throw new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId));
+        return getIfUserExists(userId, () -> ItemMapper.toItemDto(itemStorage.findByUserId(userId)));
     }
 
     @Override
