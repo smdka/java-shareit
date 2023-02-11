@@ -1,6 +1,7 @@
 package ru.practicum.shareit.item.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.item.exception.ItemNotFoundException;
 import ru.practicum.shareit.item.exception.UserHasNoPermissionException;
@@ -12,6 +13,7 @@ import ru.practicum.shareit.user.storage.UserStorage;
 import java.util.Collection;
 import java.util.function.Supplier;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ItemServiceImpl implements ItemService {
@@ -38,6 +40,7 @@ public class ItemServiceImpl implements ItemService {
         long ownerId = itemWithUpdates.getOwnerId();
         Item currItem = getIfUserExists(ownerId, () -> itemStorage.findByItemId(itemId)
                 .orElseThrow(() -> new ItemNotFoundException(String.format(ITEM_NOT_FOUND_MSG, itemId))));
+        log.info("Проверка полномочий пользователя с id = {} для изменения вещи с id = {}", ownerId, itemId);
         if (currItem.getOwnerId() != ownerId) {
             throw new UserHasNoPermissionException(String.format(NO_PERMISSION_MSG, ownerId, itemId));
         }
@@ -46,7 +49,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Item getByItemId(long itemId, long userId) {
+    public Item getByItemId(long itemId) {
         return itemStorage.findByItemId(itemId)
                 .orElseThrow(() -> new ItemNotFoundException(String.format(ITEM_NOT_FOUND_MSG, itemId)));
     }
@@ -58,7 +61,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public Collection<Item> findIfContainsTextInNameOrDescription(String text) {
-            return itemStorage.findByTextAndUserId(text);
+        return itemStorage.findByTextAndUserId(text);
     }
 
     public void updateFrom(Item item, Item itemDto) {

@@ -37,9 +37,6 @@ public class ItemStorageImpl implements ItemStorage {
 
         long itemId = updatedItem.getId();
 
-//      Не стал применять findbyItemId, т.к. насколько я понял не рекомендуется использовать внутри публичных методов
-//      класса другие публичные методы, т.к. их логика может измениться и результат будет не тот, который ожидается
-
         Item itemToUpdate = itemList.stream()
                 .filter(item -> item.getId() == itemId)
                 .findFirst()
@@ -51,6 +48,7 @@ public class ItemStorageImpl implements ItemStorage {
 
     @Override
     public Optional<Item> findByItemId(long itemId) {
+        log.info("Поиск вещи с id = {}", itemId);
         return items.values().stream()
                 .flatMap(List::stream)
                 .filter(item -> item.getId() == itemId)
@@ -59,7 +57,7 @@ public class ItemStorageImpl implements ItemStorage {
 
     @Override
     public Collection<Item> findByUserId(long userId) {
-        log.info("Вещи пользователя с id = {} отправлены", userId);
+        log.info("Поиск вещей пользователя с id = {}", userId);
         List<Item> itemList = items.get(userId);
         return itemList == null ?
                 Collections.emptyList() :

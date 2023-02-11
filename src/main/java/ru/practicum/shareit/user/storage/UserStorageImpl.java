@@ -18,11 +18,13 @@ public class UserStorageImpl implements UserStorage {
 
     @Override
     public boolean userExists(long userId) {
+        log.info("Проверка наличия пользователя с id = {}", userId);
         return users.containsKey(userId);
     }
 
     @Override
     public boolean emailExists(String email) {
+        log.info("Проверка наличия email = {}", email);
         return !users.isEmpty() && users.values().stream().anyMatch(user -> user.getEmail().equalsIgnoreCase(email));
     }
 
@@ -37,6 +39,7 @@ public class UserStorageImpl implements UserStorage {
     @Override
     public User updateById(User userWithUpdates) {
         long userId = userWithUpdates.getId();
+        log.info("Обновление пользователя с id = {}", userId);
         User userToUpdate = users.get(userId);
         userToUpdate = userWithUpdates;
         log.info("Пользователь с id = {} обновлен", userId);
@@ -45,7 +48,7 @@ public class UserStorageImpl implements UserStorage {
 
     @Override
     public Optional<User> findById(long userId) {
-        log.info("Пользователь с id = {} отправлен", userId);
+        log.info("Поиск пользователя с id = {}", userId);
         User user = users.get(userId);
         return user == null ?
                 Optional.empty() :
@@ -60,7 +63,7 @@ public class UserStorageImpl implements UserStorage {
 
     @Override
     public User deleteById(long userId) {
-        log.info("Пользователь с id = {} удален", userId);
+        log.info("Удаление пользователя с id = {}", userId);
         return users.remove(userId);
     }
 }

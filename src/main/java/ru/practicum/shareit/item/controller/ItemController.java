@@ -42,7 +42,7 @@ public class ItemController {
     public ItemDto getByItemId(@PathVariable long itemId,
                                @NotNull @RequestHeader("X-Sharer-User-Id") Long userId) {
         log.info("Получен запрос GET /items/{} с заголовком X-Sharer-User-Id = {}", itemId, userId);
-        return ItemMapper.toItemDto(itemService.getByItemId(itemId, userId));
+        return ItemMapper.toItemDto(itemService.getByItemId(itemId));
     }
 
     @GetMapping

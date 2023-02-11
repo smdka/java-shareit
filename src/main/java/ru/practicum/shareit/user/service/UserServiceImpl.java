@@ -1,7 +1,6 @@
 package ru.practicum.shareit.user.service;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.user.exception.UserEmailAlreadyExist;
 import ru.practicum.shareit.user.exception.UserNotFoundException;
@@ -11,7 +10,6 @@ import ru.practicum.shareit.user.storage.UserStorage;
 import java.util.Collection;
 import java.util.function.Supplier;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
