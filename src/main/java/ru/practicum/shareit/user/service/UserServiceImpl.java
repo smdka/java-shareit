@@ -31,8 +31,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User updateById(long userId, User userWithUpdates) {
-        User currUser = getIfEmailNotExists(userWithUpdates.getEmail(), () -> userStorage.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId))));
+        User currUser = userStorage.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId)));
+
+        String newEmail = userWithUpdates.getEmail();
+        if (!currUser.getEmail().equals(newEmail) && userStorage.emailExists(newEmail)) {
+            throw new UserEmailAlreadyExist(String.format(EMAIL_EXISTS_MSG, newEmail));
+        }
+
         updateFrom(currUser, userWithUpdates);
         return userStorage.updateById(currUser);
     }
