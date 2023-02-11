@@ -34,11 +34,12 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Item updateById(long itemId, long userId, Item itemWithUpdates) {
-        Item currItem = getIfUserExists(userId, () -> itemStorage.findByItemId(itemId)
+    public Item updateById(long itemId, Item itemWithUpdates) {
+        long ownerId = itemWithUpdates.getOwnerId();
+        Item currItem = getIfUserExists(ownerId, () -> itemStorage.findByItemId(itemId)
                 .orElseThrow(() -> new ItemNotFoundException(String.format(ITEM_NOT_FOUND_MSG, itemId))));
-        if (currItem.getOwnerId() != userId) {
-            throw new UserHasNoPermissionException(String.format(NO_PERMISSION_MSG,userId, itemId));
+        if (currItem.getOwnerId() != ownerId) {
+            throw new UserHasNoPermissionException(String.format(NO_PERMISSION_MSG, ownerId, itemId));
         }
         updateFrom(currItem, itemWithUpdates);
         return itemStorage.updateByItemId(currItem);

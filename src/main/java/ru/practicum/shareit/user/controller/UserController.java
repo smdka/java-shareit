@@ -12,9 +12,6 @@ import ru.practicum.shareit.validation.Validator;
 import javax.validation.Valid;
 import java.util.Collection;
 
-/**
- * TODO Sprint add-controllers.
- */
 @Slf4j
 @RestController
 @RequestMapping(path = "/users")
@@ -23,14 +20,14 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping
-    public UserDto save(@Valid @RequestBody UserDto user, BindingResult br) {
+    public UserDto post(@Valid @RequestBody UserDto user, BindingResult br) {
         Validator.ifHasErrorsThrowValidationException(br);
         log.info("Получен запрос POST /users");
         return UserMapper.toUserDto(userService.add(UserMapper.toUser(user)));
     }
 
     @PatchMapping("/{userId}")
-    public UserDto update(@PathVariable long userId, @RequestBody UserDto patchedUser) {
+    public UserDto patch(@PathVariable long userId, @RequestBody UserDto patchedUser) {
         log.info("Получен запрос PATCH /users/{}", userId);
         return UserMapper.toUserDto(userService.updateById(userId, UserMapper.toUser(patchedUser)));
     }

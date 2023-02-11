@@ -1,18 +1,19 @@
 package ru.practicum.shareit.user.storage;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 import ru.practicum.shareit.user.model.User;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
 @Repository
+@RequiredArgsConstructor
 public class UserStorageImpl implements UserStorage {
-    private final Map<Long, User> users = new HashMap<>();
+    private final Map<Long, User> users;
     private long id;
 
     @Override

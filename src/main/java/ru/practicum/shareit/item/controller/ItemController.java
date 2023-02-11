@@ -21,21 +21,21 @@ public class ItemController {
     private final ItemService itemService;
 
     @PostMapping
-    public ItemDto save(@NotNull @RequestHeader("X-Sharer-User-Id") Long ownerId,
-                        @Valid @RequestBody ItemDto item, BindingResult br) {
+    public ItemDto postItem(@NotNull @RequestHeader("X-Sharer-User-Id") Long ownerId,
+                            @Valid @RequestBody ItemDto item, BindingResult br) {
         Validator.ifHasErrorsThrowValidationException(br);
         log.info("Получен запрос POST /items с заголовком X-Sharer-User-Id = {}", ownerId);
         return ItemMapper.toItemDto(itemService.add(ItemMapper.toItem(item, ownerId)));
     }
 
     @PatchMapping("/{itemId}")
-    public ItemDto update(@PathVariable long itemId,
-                          @NotNull @RequestHeader("X-Sharer-User-Id") Long userId,
-                          @RequestBody ItemDto itemWithUpdates,
-                          BindingResult br) {
+    public ItemDto patchItem(@PathVariable long itemId,
+                             @NotNull @RequestHeader("X-Sharer-User-Id") Long userId,
+                             @RequestBody ItemDto itemWithUpdates,
+                             BindingResult br) {
         Validator.ifHasErrorsThrowValidationException(br);
         log.info("Получен запрос PATCH /items/{} с заголовком X-Sharer-User-Id = {}", itemId, userId);
-        return ItemMapper.toItemDto(itemService.updateById(itemId, userId, ItemMapper.toItem(itemWithUpdates, userId)));
+        return ItemMapper.toItemDto(itemService.updateById(itemId, ItemMapper.toItem(itemWithUpdates, userId)));
     }
 
     @GetMapping("/{itemId}")
