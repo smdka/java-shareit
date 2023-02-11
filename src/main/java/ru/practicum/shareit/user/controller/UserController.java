@@ -26,25 +26,25 @@ public class UserController {
     public UserDto save(@Valid @RequestBody UserDto user, BindingResult br) {
         Validator.ifHasErrorsThrowValidationException(br);
         log.info("Получен запрос POST /users");
-        return userService.add(UserMapper.toUser(user));
+        return UserMapper.toUserDto(userService.add(UserMapper.toUser(user)));
     }
 
     @PatchMapping("/{userId}")
     public UserDto update(@PathVariable long userId, @RequestBody UserDto patchedUser) {
         log.info("Получен запрос PATCH /users/{}", userId);
-        return userService.updateById(userId, UserMapper.toUser(patchedUser));
+        return UserMapper.toUserDto(userService.updateById(userId, UserMapper.toUser(patchedUser)));
     }
 
     @GetMapping("/{userId}")
     public UserDto get(@PathVariable long userId) {
         log.info("Получен запрос GET /users/{}", userId);
-        return userService.getById(userId);
+        return UserMapper.toUserDto(userService.getById(userId));
     }
 
     @GetMapping
     public Collection<UserDto> getAll() {
         log.info("Получен запрос GET /users");
-        return userService.getAll();
+        return UserMapper.toUserDtoAll(userService.getAll());
     }
 
     @DeleteMapping("/{userId}")

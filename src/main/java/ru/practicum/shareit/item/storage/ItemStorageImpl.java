@@ -36,6 +36,10 @@ public class ItemStorageImpl implements ItemStorage {
         List<Item> itemList = items.get(ownerId);
 
         long itemId = updatedItem.getId();
+
+//      Не стал применять findbyItemId, т.к. насколько я понял не рекомендуется использовать внутри публичных методов
+//      класса другие публичные методы, т.к. их логика может измениться и результат будет не тот, который ожидается
+
         Item itemToUpdate = itemList.stream()
                 .filter(item -> item.getId() == itemId)
                 .findFirst()

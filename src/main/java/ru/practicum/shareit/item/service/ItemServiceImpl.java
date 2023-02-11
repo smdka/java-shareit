@@ -2,7 +2,6 @@ package ru.practicum.shareit.item.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.exception.ItemNotFoundException;
 import ru.practicum.shareit.item.exception.UserHasNoPermissionException;
 import ru.practicum.shareit.item.model.Item;
@@ -28,20 +27,20 @@ public class ItemServiceImpl implements ItemService {
     }
 
     private <T> T getIfUserExists(long userId, Supplier<T> s) {
-        if (userStorage.isUserExist(userId)) {
+        if (userStorage.userExists(userId)) {
             return s.get();
         }
         throw new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId));
     }
 
     @Override
-    public Item updateById(long itemId, long userId, ItemDto itemWithUpdates) {
+    public Item updateById(long itemId, long userId, Item itemWithUpdates) {
         Item currItem = getIfUserExists(userId, () -> itemStorage.findByItemId(itemId)
                 .orElseThrow(() -> new ItemNotFoundException(String.format(ITEM_NOT_FOUND_MSG, itemId))));
         if (currItem.getOwnerId() != userId) {
             throw new UserHasNoPermissionException(String.format(NO_PERMISSION_MSG,userId, itemId));
         }
-        updateFromDto(currItem, itemWithUpdates);
+        updateFrom(currItem, itemWithUpdates);
         return itemStorage.updateByItemId(currItem);
     }
 
@@ -61,7 +60,7 @@ public class ItemServiceImpl implements ItemService {
             return itemStorage.findByTextAndUserId(text);
     }
 
-    public void updateFromDto(Item item, ItemDto itemDto) {
+    public void updateFrom(Item item, Item itemDto) {
         String newName = itemDto.getName();
         if (newName != null) {
             item.setName(newName);

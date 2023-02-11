@@ -16,12 +16,12 @@ public class UserStorageImpl implements UserStorage {
     private long id;
 
     @Override
-    public boolean isUserExist(long userId) {
+    public boolean userExists(long userId) {
         return users.containsKey(userId);
     }
 
     @Override
-    public boolean isEmailExist(String email) {
+    public boolean emailExists(String email) {
         return !users.isEmpty() && users.values().stream().anyMatch(user -> user.getEmail().equalsIgnoreCase(email));
     }
 
@@ -34,9 +34,10 @@ public class UserStorageImpl implements UserStorage {
     }
 
     @Override
-    public User updateById(long userId, User userWithUpdates) {
+    public User updateById(User userWithUpdates) {
+        long userId = userWithUpdates.getId();
         User userToUpdate = users.get(userId);
-        userToUpdate.updateFrom(userWithUpdates);
+        userToUpdate = userWithUpdates;
         log.info("Пользователь с id = {} обновлен", userId);
         return userToUpdate;
     }

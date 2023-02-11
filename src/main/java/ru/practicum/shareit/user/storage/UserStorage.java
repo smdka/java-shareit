@@ -6,13 +6,13 @@ import java.util.Collection;
 import java.util.Optional;
 
 public interface UserStorage {
-    boolean isUserExist(long userId);
+    boolean userExists(long userId);
 
-    boolean isEmailExist(String email);
+    boolean emailExists(String email);
 
     User save(User user);
 
-    User updateById(long userId, User userWithUpdates);
+    User updateById(User userWithUpdates);
 
     Optional<User> findById(long userId);
 

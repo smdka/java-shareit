@@ -3,8 +3,6 @@ package ru.practicum.shareit.user.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.user.dto.UserDto;
-import ru.practicum.shareit.user.dto.UserMapper;
 import ru.practicum.shareit.user.exception.UserEmailAlreadyExist;
 import ru.practicum.shareit.user.exception.UserNotFoundException;
 import ru.practicum.shareit.user.model.User;
@@ -22,39 +20,52 @@ public class UserServiceImpl implements UserService {
     private final UserStorage userStorage;
 
     @Override
-    public UserDto add(User user) {
-        return getIfEmailNotExists(user.getEmail(), () -> UserMapper.toUserDto(userStorage.save(user)));
+    public User add(User user) {
+        return getIfEmailNotExists(user.getEmail(), () -> userStorage.save(user));
     }
 
-    private UserDto getIfEmailNotExists(String email, Supplier<UserDto> s) {
-        if (userStorage.isEmailExist(email)) {
+    private <T> T getIfEmailNotExists(String email, Supplier<T> s) {
+        if (userStorage.emailExists(email)) {
             throw new UserEmailAlreadyExist(String.format(EMAIL_EXISTS_MSG, email));
         }
         return s.get();
     }
 
     @Override
-    public UserDto updateById(long userId, User userWithUpdates) {
-        return getIfEmailNotExists(userWithUpdates.getEmail(),
-                () -> UserMapper.toUserDto(userStorage.updateById(userId, userWithUpdates)));
+    public User updateById(long userId, User userWithUpdates) {
+        User currUser = getIfEmailNotExists(userWithUpdates.getEmail(), () -> userStorage.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId))));
+        updateFrom(currUser, userWithUpdates);
+        return userStorage.updateById(currUser);
     }
 
     @Override
-    public UserDto getById(long userId) {
-        return UserMapper.toUserDto(userStorage.findById(userId)
-                .orElseThrow(
-                        () -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId))));
+    public User getById(long userId) {
+        return userStorage.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId)));
     }
 
     @Override
-    public Collection<UserDto> getAll() {
-        return UserMapper.toUserDto(userStorage.findAll());
+    public Collection<User> getAll() {
+        return userStorage.findAll();
     }
 
     @Override
     public void deleteById(long userId) {
         if (userStorage.deleteById(userId) == null) {
             throw new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId));
+        }
+    }
+
+    public void updateFrom(User userToUpdate, User userWithUpdates) {
+        String newName = userWithUpdates.getName();
+        if (newName != null) {
+             userToUpdate.setName(newName);
+        }
+
+        String newEmail = userWithUpdates.getEmail();
+        if (newEmail != null) {
+            userToUpdate.setEmail(newEmail);
         }
     }
 }

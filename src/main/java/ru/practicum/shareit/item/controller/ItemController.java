@@ -35,7 +35,7 @@ public class ItemController {
                           BindingResult br) {
         Validator.ifHasErrorsThrowValidationException(br);
         log.info("Получен запрос PATCH /items/{} с заголовком X-Sharer-User-Id = {}", itemId, userId);
-        return ItemMapper.toItemDto(itemService.updateById(itemId, userId, itemWithUpdates));
+        return ItemMapper.toItemDto(itemService.updateById(itemId, userId, ItemMapper.toItem(itemWithUpdates, userId)));
     }
 
     @GetMapping("/{itemId}")
