@@ -24,7 +24,6 @@ public class UserStorageImpl implements UserStorage {
 
     @Override
     public boolean emailExists(String email) {
-        log.info("Проверка наличия email = {}", email);
         return !users.isEmpty() && users.values().stream().anyMatch(user -> user.getEmail().equalsIgnoreCase(email));
     }
 

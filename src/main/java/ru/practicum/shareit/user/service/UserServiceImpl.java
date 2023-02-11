@@ -1,6 +1,7 @@
 package ru.practicum.shareit.user.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.user.exception.UserEmailAlreadyExist;
 import ru.practicum.shareit.user.exception.UserNotFoundException;
@@ -8,8 +9,8 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.storage.UserStorage;
 
 import java.util.Collection;
-import java.util.function.Supplier;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
@@ -19,14 +20,16 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User add(User user) {
-        return getIfEmailNotExists(user.getEmail(), () -> userStorage.save(user));
+        ifEmailExistsThrowException(user);
+        return userStorage.save(user);
     }
 
-    private <T> T getIfEmailNotExists(String email, Supplier<T> s) {
+    private void ifEmailExistsThrowException(User user) {
+        String email = user.getEmail();
+        log.info("Проверка наличия email = {} перед добавлением пользователя", email);
         if (userStorage.emailExists(email)) {
             throw new UserEmailAlreadyExist(String.format(EMAIL_EXISTS_MSG, email));
         }
-        return s.get();
     }
 
     @Override
@@ -34,13 +37,19 @@ public class UserServiceImpl implements UserService {
         User currUser = userStorage.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId)));
 
-        String newEmail = userWithUpdates.getEmail();
-        if (!currUser.getEmail().equals(newEmail) && userStorage.emailExists(newEmail)) {
-            throw new UserEmailAlreadyExist(String.format(EMAIL_EXISTS_MSG, newEmail));
-        }
+        ifNotSameEmailsOrEmailExistsThrowException(userWithUpdates, currUser);
 
         updateFrom(currUser, userWithUpdates);
         return userStorage.updateById(currUser);
+    }
+
+    private void ifNotSameEmailsOrEmailExistsThrowException(User userWithUpdates, User currUser) {
+        String newEmail = userWithUpdates.getEmail();
+        log.info("Проверка наличия email = {} и его сравнение с email пользователя с id = {}" +
+                " перед обновлением пользователя", newEmail, currUser.getId());
+        if (!currUser.getEmail().equals(newEmail) && userStorage.emailExists(newEmail)) {
+            throw new UserEmailAlreadyExist(String.format(EMAIL_EXISTS_MSG, newEmail));
+        }
     }
 
     @Override

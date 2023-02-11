@@ -40,12 +40,18 @@ public class ItemServiceImpl implements ItemService {
         long ownerId = itemWithUpdates.getOwnerId();
         Item currItem = getIfUserExists(ownerId, () -> itemStorage.findByItemId(itemId)
                 .orElseThrow(() -> new ItemNotFoundException(String.format(ITEM_NOT_FOUND_MSG, itemId))));
+
+        checkForUserPermissionOrThrowException(itemId, ownerId, currItem);
+
+        updateFrom(currItem, itemWithUpdates);
+        return itemStorage.updateByItemId(currItem);
+    }
+
+    private void checkForUserPermissionOrThrowException(long itemId, long ownerId, Item currItem) {
         log.info("Проверка полномочий пользователя с id = {} для изменения вещи с id = {}", ownerId, itemId);
         if (currItem.getOwnerId() != ownerId) {
             throw new UserHasNoPermissionException(String.format(NO_PERMISSION_MSG, ownerId, itemId));
         }
-        updateFrom(currItem, itemWithUpdates);
-        return itemStorage.updateByItemId(currItem);
     }
 
     @Override
