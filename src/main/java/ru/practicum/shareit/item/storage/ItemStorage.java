@@ -8,7 +8,7 @@ import java.util.Optional;
 public interface ItemStorage {
     Item save(Item item);
 
-    Item updateByItemId(long itemId, long userId, Item updatedItem);
+    Item updateByItemId(Item updatedItem);
 
     Optional<Item> findByItemId(long itemId);
 

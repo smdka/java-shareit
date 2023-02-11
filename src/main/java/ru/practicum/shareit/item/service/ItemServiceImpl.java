@@ -42,7 +42,7 @@ public class ItemServiceImpl implements ItemService {
             throw new UserHasNoPermissionException(String.format(NO_PERMISSION_MSG,userId, itemId));
         }
         updateFromDto(currItem, itemWithUpdates);
-        return itemStorage.updateByItemId(userId, userId, currItem);
+        return itemStorage.updateByItemId(currItem);
     }
 
     @Override

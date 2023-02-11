@@ -31,10 +31,17 @@ public class ItemStorageImpl implements ItemStorage {
     }
 
     @Override
-    public Item updateByItemId(long itemId, long userId, Item updatedItem) {
-        List<Item> itemList = items.get(userId);
-        itemList.add(updatedItem);
-        log.info("Вещь с id = {} пользователя с id = {} обновлена", itemId, userId);
+    public Item updateByItemId(Item updatedItem) {
+        long ownerId = updatedItem.getOwnerId();
+        List<Item> itemList = items.get(ownerId);
+
+        long itemId = updatedItem.getId();
+        Item itemToUpdate = itemList.stream()
+                .filter(item -> item.getId() == itemId)
+                .findFirst()
+                .get();
+        itemToUpdate = updatedItem;
+        log.info("Вещь с id = {} пользователя с id = {} обновлена", itemId, ownerId);
         return updatedItem;
     }
 
