@@ -10,8 +10,6 @@ import ru.practicum.shareit.item.exception.UserHasNoPermissionException;
 import ru.practicum.shareit.user.exception.UserEmailAlreadyExist;
 import ru.practicum.shareit.user.exception.UserNotFoundException;
 
-import javax.validation.ValidationException;
-
 @Slf4j
 @RestControllerAdvice
 public class ExceptionsHandler {
@@ -36,12 +34,6 @@ public class ExceptionsHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public void handleNoPermission(final UserHasNoPermissionException e) {
-        log.warn(e.getMessage());
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public void handleValidationErrors(final ValidationException e) {
         log.warn(e.getMessage());
     }
 }

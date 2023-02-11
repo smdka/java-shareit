@@ -2,12 +2,10 @@ package ru.practicum.shareit.item.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemMapper;
 import ru.practicum.shareit.item.service.ItemService;
-import ru.practicum.shareit.validation.Validator;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -22,8 +20,7 @@ public class ItemController {
 
     @PostMapping
     public ItemDto postItem(@NotNull @RequestHeader("X-Sharer-User-Id") Long ownerId,
-                            @Valid @RequestBody ItemDto item, BindingResult br) {
-        Validator.ifHasErrorsThrowValidationException(br);
+                            @Valid @RequestBody ItemDto item) {
         log.info("Получен запрос POST /items с заголовком X-Sharer-User-Id = {}", ownerId);
         return ItemMapper.toItemDto(itemService.add(ItemMapper.toItem(item, ownerId)));
     }
@@ -31,9 +28,7 @@ public class ItemController {
     @PatchMapping("/{itemId}")
     public ItemDto patchItem(@PathVariable long itemId,
                              @NotNull @RequestHeader("X-Sharer-User-Id") Long userId,
-                             @RequestBody ItemDto itemWithUpdates,
-                             BindingResult br) {
-        Validator.ifHasErrorsThrowValidationException(br);
+                             @RequestBody ItemDto itemWithUpdates) {
         log.info("Получен запрос PATCH /items/{} с заголовком X-Sharer-User-Id = {}", itemId, userId);
         return ItemMapper.toItemDto(itemService.updateById(itemId, ItemMapper.toItem(itemWithUpdates, userId)));
     }
