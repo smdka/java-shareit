@@ -14,18 +14,19 @@ public final class ItemMapper {
         return new ItemDto(item.getId(), item.getName(), item.getDescription(), item.getAvailable());
     }
 
-    public static Collection<ItemDto> toItemDto(Collection<? extends Item> items) {
+    public static Collection<ItemDto> toItemDtoAll(Collection<? extends Item> items) {
         return items.stream()
                 .map(ItemMapper::toItemDto)
                 .collect(toList());
     }
 
-    public static Item toItem(ItemDto itemDto) {
+    public static Item toItem(ItemDto itemDto, long ownerId) {
         Item item = new Item();
         item.setId(itemDto.getId());
         item.setName(itemDto.getName());
         item.setDescription(itemDto.getDescription());
         item.setAvailable(itemDto.getAvailable());
+        item.setOwnerId(ownerId);
         return item;
     }
 }

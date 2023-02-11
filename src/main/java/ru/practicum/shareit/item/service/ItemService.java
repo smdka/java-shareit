@@ -6,13 +6,13 @@ import ru.practicum.shareit.item.model.Item;
 import java.util.Collection;
 
 public interface ItemService {
-    ItemDto add(long userId, Item item);
+    Item add(Item item);
 
-    ItemDto updateById(long itemId, long userId, Item itemWithUpdates);
+    Item updateById(long itemId, long userId, ItemDto itemWithUpdates);
 
-    ItemDto getByItemId(long itemId, long userId);
+    Item getByItemId(long itemId, long userId);
 
-    Collection<ItemDto> getByUserId(long userId);
+    Collection<Item> getByUserId(long userId);
 
-    Collection<ItemDto> findIfContainsTextInNameOrDescription(String text);
+    Collection<Item> findIfContainsTextInNameOrDescription(String text);
 }

@@ -6,9 +6,9 @@ import java.util.Collection;
 import java.util.Optional;
 
 public interface ItemStorage {
-    Item save(long userId, Item item);
+    Item save(Item item);
 
-    Item updateByItemId(long itemId, long userId, Item itemWithUpdates);
+    Item updateByItemId(long itemId, long userId, Item updatedItem);
 
     Optional<Item> findByItemId(long itemId);
 

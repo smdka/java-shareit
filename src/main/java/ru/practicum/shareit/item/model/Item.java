@@ -2,7 +2,6 @@ package ru.practicum.shareit.item.model;
 
 import lombok.Data;
 import ru.practicum.shareit.request.model.ItemRequest;
-import ru.practicum.shareit.user.model.User;
 
 /**
  * TODO Sprint add-controllers.
@@ -13,23 +12,6 @@ public class Item {
     private String name;
     private String description;
     private Boolean available;
-    private User owner;
+    private long ownerId;
     private ItemRequest request;
-
-    public void updateFrom(Item itemWithUpdates) {
-        String newName = itemWithUpdates.getName();
-        if (newName != null) {
-            this.name = newName;
-        }
-
-        String newDescription = itemWithUpdates.getDescription();
-        if (newDescription != null) {
-            this.description = newDescription;
-        }
-
-        Boolean newAvailable = itemWithUpdates.getAvailable();
-        if (newAvailable != null) {
-            this.available = newAvailable;
-        }
-    }
 }
