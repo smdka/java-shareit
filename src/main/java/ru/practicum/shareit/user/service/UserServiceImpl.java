@@ -40,7 +40,8 @@ public class UserServiceImpl implements UserService {
         ifNotSameEmailsOrEmailExistsThrowException(userWithUpdates, currUser);
 
         updateFrom(currUser, userWithUpdates);
-        return userStorage.updateById(currUser);
+        userStorage.update(currUser);
+        return currUser;
     }
 
     private void ifNotSameEmailsOrEmailExistsThrowException(User userWithUpdates, User currUser) {
@@ -70,7 +71,7 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    public void updateFrom(User userToUpdate, User userWithUpdates) {
+    private void updateFrom(User userToUpdate, User userWithUpdates) {
         String newName = userWithUpdates.getName();
         if (newName != null) {
              userToUpdate.setName(newName);

@@ -12,7 +12,7 @@ public interface UserStorage {
 
     User save(User user);
 
-    User updateById(User userWithUpdates);
+    void update(User userWithUpdates);
 
     Optional<User> findById(long userId);
 

@@ -5,11 +5,9 @@ import org.springframework.stereotype.Repository;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.util.StringUtil;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -18,39 +16,32 @@ import static java.util.stream.Collectors.toList;
 @Slf4j
 @Repository
 public class ItemStorageImpl implements ItemStorage {
-    private final Map<Long, List<Item>> items = new HashMap<>();
+    private final Map<Long, Map<Long, Item>> items = new HashMap<>();
     private long id;
 
     @Override
     public Item save(Item item) {
         item.setId(++id);
         long ownerId = item.getOwnerId();
-        items.computeIfAbsent(ownerId, k -> new ArrayList<>()).add(item);
+        items.computeIfAbsent(ownerId, k -> new HashMap<>()).put(id, item);
         log.info("Вещь '{}' пользователя с id = {} добавлена и ей присвоен id = {}",item.getName(), ownerId, id);
         return item;
     }
 
     @Override
-    public Item updateByItemId(Item updatedItem) {
+    public void update(Item updatedItem) {
         long ownerId = updatedItem.getOwnerId();
-        List<Item> itemList = items.get(ownerId);
-
         long itemId = updatedItem.getId();
-
-        Item itemToUpdate = itemList.stream()
-                .filter(item -> item.getId() == itemId)
-                .findFirst()
-                .get();
-        itemToUpdate = updatedItem;
+        items.get(ownerId).put(itemId, updatedItem);
         log.info("Вещь с id = {} пользователя с id = {} обновлена", itemId, ownerId);
-        return updatedItem;
     }
 
     @Override
     public Optional<Item> findByItemId(long itemId) {
         log.info("Поиск вещи с id = {}", itemId);
         return items.values().stream()
-                .flatMap(List::stream)
+                .map(Map::values)
+                .flatMap(Collection::stream)
                 .filter(item -> item.getId() == itemId)
                 .findFirst();
     }
@@ -58,10 +49,10 @@ public class ItemStorageImpl implements ItemStorage {
     @Override
     public Collection<Item> findByUserId(long userId) {
         log.info("Поиск вещей пользователя с id = {}", userId);
-        List<Item> itemList = items.get(userId);
+        Map<Long, Item> itemList = items.get(userId);
         return itemList == null ?
                 Collections.emptyList() :
-                itemList;
+                itemList.values();
     }
 
     @Override
@@ -70,7 +61,8 @@ public class ItemStorageImpl implements ItemStorage {
         return text.isBlank() ?
                 Collections.emptyList() :
                 items.values().stream()
-                        .flatMap(List::stream)
+                        .map(Map::values)
+                        .flatMap(Collection::stream)
                         .filter(item -> (StringUtil.containsTextIgnoreCase(item.getName(), text) ||
                                 StringUtil.containsTextIgnoreCase(item.getDescription(), text)) &&
                                 item.getAvailable())

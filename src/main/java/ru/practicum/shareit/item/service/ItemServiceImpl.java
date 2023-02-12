@@ -44,7 +44,8 @@ public class ItemServiceImpl implements ItemService {
         checkForUserPermissionOrThrowException(itemId, ownerId, currItem);
 
         updateFrom(currItem, itemWithUpdates);
-        return itemStorage.updateByItemId(currItem);
+        itemStorage.update(currItem);
+        return currItem;
     }
 
     private void checkForUserPermissionOrThrowException(long itemId, long ownerId, Item currItem) {
@@ -70,7 +71,7 @@ public class ItemServiceImpl implements ItemService {
         return itemStorage.findByTextAndUserId(text);
     }
 
-    public void updateFrom(Item item, Item itemDto) {
+    private void updateFrom(Item item, Item itemDto) {
         String newName = itemDto.getName();
         if (newName != null) {
             item.setName(newName);

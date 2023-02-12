@@ -36,13 +36,10 @@ public class UserStorageImpl implements UserStorage {
     }
 
     @Override
-    public User updateById(User userWithUpdates) {
+    public void update(User userWithUpdates) {
         long userId = userWithUpdates.getId();
-        log.info("Обновление пользователя с id = {}", userId);
-        User userToUpdate = users.get(userId);
-        userToUpdate = userWithUpdates;
+        users.put(userId, userWithUpdates);
         log.info("Пользователь с id = {} обновлен", userId);
-        return userToUpdate;
     }
 
     @Override
