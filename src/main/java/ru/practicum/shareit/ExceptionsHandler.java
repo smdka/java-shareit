@@ -10,30 +10,43 @@ import ru.practicum.shareit.item.exception.UserHasNoPermissionException;
 import ru.practicum.shareit.user.exception.UserEmailAlreadyExist;
 import ru.practicum.shareit.user.exception.UserNotFoundException;
 
+import java.util.Map;
+
 @Slf4j
 @RestControllerAdvice
 public class ExceptionsHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.CONFLICT)
-    public void handleEmailConflict(final UserEmailAlreadyExist e) {
+    public Map<HttpStatus, String> handleEmailConflict(final UserEmailAlreadyExist e) {
         log.warn(e.getMessage());
+        return Map.of(HttpStatus.CONFLICT, e.getMessage());
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public void handleUserNotFound(final UserNotFoundException e) {
+    public Map<HttpStatus, String> handleUserNotFound(final UserNotFoundException e) {
         log.warn(e.getMessage());
+        return Map.of(HttpStatus.NOT_FOUND, e.getMessage());
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public void handleItemNotFound(final ItemNotFoundException e) {
+    public Map<HttpStatus, String> handleItemNotFound(final ItemNotFoundException e) {
         log.warn(e.getMessage());
+        return Map.of(HttpStatus.NOT_FOUND, e.getMessage());
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.FORBIDDEN)
-    public void handleNoPermission(final UserHasNoPermissionException e) {
+    public Map<HttpStatus, String> handleNoPermission(final UserHasNoPermissionException e) {
         log.warn(e.getMessage());
+        return Map.of(HttpStatus.FORBIDDEN, e.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public Map<HttpStatus, String> handleException(final Exception e) {
+        log.warn(e.getMessage());
+        return Map.of(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
     }
 }

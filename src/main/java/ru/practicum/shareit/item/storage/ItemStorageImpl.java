@@ -24,7 +24,7 @@ public class ItemStorageImpl implements ItemStorage {
         item.setId(++id);
         long ownerId = item.getOwnerId();
         items.computeIfAbsent(ownerId, k -> new HashMap<>()).put(id, item);
-        log.info("Вещь '{}' пользователя с id = {} добавлена и ей присвоен id = {}",item.getName(), ownerId, id);
+        log.info("Вещь '{}' пользователя с id = {} добавлена и ей присвоен id = {}", item.getName(), ownerId, id);
         return item;
     }
 
