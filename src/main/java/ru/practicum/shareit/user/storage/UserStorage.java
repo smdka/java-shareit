@@ -6,9 +6,9 @@ import java.util.Collection;
 import java.util.Optional;
 
 public interface UserStorage {
-    boolean userExists(long userId);
+    boolean hasUser(long userId);
 
-    boolean emailExists(String email);
+    boolean hasEmail(String email);
 
     User save(User user);
 

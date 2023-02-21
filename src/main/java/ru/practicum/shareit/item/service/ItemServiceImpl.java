@@ -29,7 +29,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     private <T> T getIfUserExists(long userId, Supplier<T> s) {
-        if (userStorage.userExists(userId)) {
+        if (userStorage.hasUser(userId)) {
             return s.get();
         }
         throw new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId));
@@ -41,14 +41,15 @@ public class ItemServiceImpl implements ItemService {
         Item currItem = getIfUserExists(ownerId, () -> itemStorage.findByItemId(itemId)
                 .orElseThrow(() -> new ItemNotFoundException(String.format(ITEM_NOT_FOUND_MSG, itemId))));
 
-        checkForUserPermissionOrThrowException(itemId, ownerId, currItem);
+        checkForUserPermissionOrThrowException(ownerId, currItem);
 
         updateFrom(currItem, itemWithUpdates);
         itemStorage.update(currItem);
         return currItem;
     }
 
-    private void checkForUserPermissionOrThrowException(long itemId, long ownerId, Item currItem) {
+    private void checkForUserPermissionOrThrowException(long ownerId, Item currItem) {
+        long itemId = currItem.getId();
         log.info("Проверка полномочий пользователя с id = {} для изменения вещи с id = {}", ownerId, itemId);
         if (currItem.getOwnerId() != ownerId) {
             throw new UserHasNoPermissionException(String.format(NO_PERMISSION_MSG, ownerId, itemId));

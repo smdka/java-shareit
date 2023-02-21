@@ -17,13 +17,13 @@ public class UserStorageImpl implements UserStorage {
     private long id;
 
     @Override
-    public boolean userExists(long userId) {
+    public boolean hasUser(long userId) {
         log.info("Проверка наличия пользователя с id = {}", userId);
         return users.containsKey(userId);
     }
 
     @Override
-    public boolean emailExists(String email) {
+    public boolean hasEmail(String email) {
         return !users.isEmpty() && users.values().stream().anyMatch(user -> user.getEmail().equalsIgnoreCase(email));
     }
 

@@ -27,7 +27,7 @@ public class UserServiceImpl implements UserService {
     private void ifEmailExistsThrowException(User user) {
         String email = user.getEmail();
         log.info("Проверка наличия email = {} перед добавлением пользователя", email);
-        if (userStorage.emailExists(email)) {
+        if (userStorage.hasEmail(email)) {
             throw new UserEmailAlreadyExist(String.format(EMAIL_EXISTS_MSG, email));
         }
     }
@@ -48,7 +48,7 @@ public class UserServiceImpl implements UserService {
         String newEmail = userWithUpdates.getEmail();
         log.info("Проверка наличия email = {} и его сравнение с email пользователя с id = {}" +
                 " перед обновлением пользователя", newEmail, currUser.getId());
-        if (!currUser.getEmail().equals(newEmail) && userStorage.emailExists(newEmail)) {
+        if (!currUser.getEmail().equals(newEmail) && userStorage.hasEmail(newEmail)) {
             throw new UserEmailAlreadyExist(String.format(EMAIL_EXISTS_MSG, newEmail));
         }
     }
