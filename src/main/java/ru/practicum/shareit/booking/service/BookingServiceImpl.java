@@ -36,10 +36,13 @@ public class BookingServiceImpl implements BookingService {
             "У пользователя с id = %d нет прав на изменение/получение бронирования с id = %d";
     private static final String BOOKING_DATETIME_ERROR_MSG =
             "Время окончания бронирования не может быть раньше начала бронирования";
-    private static final Sort SORT_BY_END = Sort.by(Sort.Direction.DESC, "end");
+    private static final String ALREADY_BOOKED_MSG = "Предмет уже забронирован";
+    private static final String CANT_CHANGE_STATUS_MSG = "Нельзя изменить статус с APPROVED";
+    private static final String CANT_BOOK_BY_ITEM_OWNER_MSG = "Хозяин вещи не может создать бронь своей вещи";
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
+    private final Strategy strategy;
 
     @Override
     public Booking add(Long bookerId, Booking booking) {
@@ -56,6 +59,10 @@ public class BookingServiceImpl implements BookingService {
 
         if (!item.getAvailable()) {
             throw new ItemNotAvailableException(String.format(ITEM_NOT_AVAILABLE_MSG, itemId));
+        }
+
+        if (item.getOwner().getId().equals(bookerId)) {
+            throw new UserHasNoPermissionException(CANT_BOOK_BY_ITEM_OWNER_MSG);
         }
 
         Booking savedBooking = bookingRepository.save(booking);
@@ -75,7 +82,7 @@ public class BookingServiceImpl implements BookingService {
                 () -> new BookingNotFoundException(String.format(BOOKING_NOT_FOUND_MSG, bookingId)));
 
         if (booking.getStatus().equals(Booking.Status.APPROVED)) {
-            throw new IllegalArgumentException("Нельзя изменить статус с APPROVED");
+            throw new IllegalArgumentException(CANT_CHANGE_STATUS_MSG);
         }
 
         Item item = booking.getItem();
@@ -113,16 +120,7 @@ public class BookingServiceImpl implements BookingService {
         if (!userRepository.existsById(userId)) {
             throw new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId));
         }
-        Map<State, Function<Long, Collection<Booking>>> suppliers =
-                Map.of(
-                        State.ALL, bookerId -> bookingRepository.findAllByBookerId(bookerId, SORT_BY_END),
-                        State.WAITING, bookerId -> bookingRepository.findAllByBookerIdAndStatus(bookerId, Booking.Status.WAITING, SORT_BY_END),
-                        State.REJECTED, bookerId -> bookingRepository.findAllByBookerIdAndStatus(bookerId, Booking.Status.REJECTED, SORT_BY_END),
-                        State.PAST, bookerId -> bookingRepository.findAllByBookerIdAndEndBefore(bookerId, LocalDateTime.now(), SORT_BY_END),
-                        State.FUTURE, bookerId -> bookingRepository.findAllByBookerIdAndStartAfter(bookerId, LocalDateTime.now(), SORT_BY_END),
-                        State.CURRENT, bookerId -> bookingRepository.findAllByBookerIdAndStartBeforeAndEndAfter(bookerId, LocalDateTime.now(), LocalDateTime.now(), SORT_BY_END)
-                );
-        return suppliers.get(state).apply(userId);
+       return strategy.forUser(userId, state);
     }
 
     @Override
@@ -131,15 +129,6 @@ public class BookingServiceImpl implements BookingService {
             throw new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, itemOwnerId));
         }
         Collection<Long> itemIds = itemRepository.findIdsByOwnerId(itemOwnerId);
-        Map<State, Function<Collection<Long>, Collection<Booking>>> suppliers =
-                Map.of(
-                        State.ALL, ids -> bookingRepository.findAllByItemIdIn(itemIds, SORT_BY_END),
-                        State.WAITING, ids -> bookingRepository.findAllByItemIdInAndStatus(ids, Booking.Status.WAITING, SORT_BY_END),
-                        State.REJECTED, ids -> bookingRepository.findAllByItemIdInAndStatus(ids, Booking.Status.REJECTED, SORT_BY_END),
-                        State.PAST, ids -> bookingRepository.findAllByItemIdInAndEndBefore(ids, LocalDateTime.now(), SORT_BY_END),
-                        State.FUTURE, ids -> bookingRepository.findAllByItemIdInAndStartAfter(ids, LocalDateTime.now(), SORT_BY_END),
-                        State.CURRENT, ids -> bookingRepository.findAllByItemIdInAndStartBeforeAndEndAfter(ids, LocalDateTime.now(), LocalDateTime.now(), SORT_BY_END)
-                );
-        return suppliers.get(state).apply(itemIds);
+        return strategy.forItemOwner(itemIds, state);
     }
 }

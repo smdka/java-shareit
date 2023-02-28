@@ -7,15 +7,12 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 @Value
-public class ItemDto {
+public class OutputItemDto {
     Long id;
-
-    @NotBlank
     String name;
-
-    @NotBlank
     String description;
-
-    @NotNull
     Boolean available;
+    BookingDtoForItem lastBooking;
+    BookingDtoForItem nextBooking;
+    
 }

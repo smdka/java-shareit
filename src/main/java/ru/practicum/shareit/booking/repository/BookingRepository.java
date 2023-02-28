@@ -2,11 +2,13 @@ package ru.practicum.shareit.booking.repository;
 
 import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.stereotype.Repository;
 import ru.practicum.shareit.booking.model.Booking;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
 
+@Repository
 public interface BookingRepository extends CrudRepository<Booking, Long> {
     Collection<Booking> findAllByBookerId(Long bookerId, Sort sort);
     Collection<Booking> findAllByBookerIdAndStatus(Long bookerId, Booking.Status status, Sort sort);

@@ -3,6 +3,9 @@ package ru.practicum.shareit.item.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.booking.repository.State;
+import ru.practicum.shareit.booking.service.Strategy;
 import ru.practicum.shareit.item.exception.ItemNotFoundException;
 import ru.practicum.shareit.item.exception.UserHasNoPermissionException;
 import ru.practicum.shareit.item.model.Item;
@@ -12,6 +15,8 @@ import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 @Slf4j
@@ -23,6 +28,7 @@ public class ItemServiceImpl implements ItemService {
     private static final String NO_PERMISSION_MSG = "У пользователя с id = %d нет прав на изменение вещи с id = %d";
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
+    private final Strategy strategy;
 
     @Override
     public Item add(Item item) {
@@ -58,9 +64,20 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Item getByItemId(long itemId) {
-        return itemRepository.findById(itemId)
+    public Map<Item, List<Booking>> getByItemId(long itemId, long userId) {
+        Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new ItemNotFoundException(String.format(ITEM_NOT_FOUND_MSG, itemId)));
+        Booking nextBooking = null;
+        Booking lastBooking = null;
+        if (item.getOwner().getId().equals(userId)) {
+            nextBooking = strategy.forItemOwner(List.of(itemId), State.FUTURE).stream()
+                    .findFirst()
+                    .orElse(null);
+            lastBooking = strategy.forItemOwner(List.of(itemId), State.PAST).stream()
+                    .findFirst()
+                    .orElse(null);
+        }
+        return Map.of(item, List.of(lastBooking, nextBooking));
     }
 
     @Override
