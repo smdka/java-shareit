@@ -7,7 +7,7 @@ import javax.validation.constraints.NotBlank;
 
 @Value
 public class UserDto {
-    long id;
+    Long id;
 
     @NotBlank
     String name;

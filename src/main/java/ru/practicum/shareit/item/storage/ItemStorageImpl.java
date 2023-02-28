@@ -22,7 +22,7 @@ public class ItemStorageImpl implements ItemStorage {
     @Override
     public Item save(Item item) {
         item.setId(++id);
-        long ownerId = item.getOwnerId();
+        long ownerId = item.getOwner().getId();
         items.computeIfAbsent(ownerId, k -> new HashMap<>()).put(id, item);
         log.info("Вещь '{}' пользователя с id = {} добавлена и ей присвоен id = {}", item.getName(), ownerId, id);
         return item;
@@ -30,7 +30,7 @@ public class ItemStorageImpl implements ItemStorage {
 
     @Override
     public void update(Item updatedItem) {
-        long ownerId = updatedItem.getOwnerId();
+        long ownerId = updatedItem.getOwner().getId();
         long itemId = updatedItem.getId();
         items.get(ownerId).put(itemId, updatedItem);
         log.info("Вещь с id = {} пользователя с id = {} обновлена", itemId, ownerId);

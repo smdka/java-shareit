@@ -50,6 +50,6 @@ public class ItemController {
     public Collection<ItemDto> search(@RequestParam String text,
                                       @NotNull @RequestHeader("X-Sharer-User-Id") Long userId) {
         log.info("Получен запрос GET /items/search?text={} с заголовком X-Sharer-User-Id = {}", text, userId);
-        return ItemMapper.toItemDtoAll(itemService.findIfContainsTextInNameOrDescription(text));
+        return ItemMapper.toItemDtoAll(itemService.searchInNameOrDescription(text));
     }
 }

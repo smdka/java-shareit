@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import ru.practicum.shareit.user.exception.UserEmailAlreadyExist;
 import ru.practicum.shareit.user.exception.UserNotFoundException;
 import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.user.storage.UserStorage;
+import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.util.Collection;
 
@@ -16,31 +16,22 @@ import java.util.Collection;
 public class UserServiceImpl implements UserService {
     private static final String USER_NOT_FOUND_MSG = "Пользователь с id = %d не найден";
     private static final String EMAIL_EXISTS_MSG = "Пользователь с email = %s уже существует";
-    private final UserStorage userStorage;
+    private final UserRepository userRepository;
 
     @Override
     public User add(User user) {
-        ifEmailExistsThrowException(user);
-        return userStorage.save(user);
-    }
-
-    private void ifEmailExistsThrowException(User user) {
-        String email = user.getEmail();
-        log.info("Проверка наличия email = {} перед добавлением пользователя", email);
-        if (userStorage.hasEmail(email)) {
-            throw new UserEmailAlreadyExist(String.format(EMAIL_EXISTS_MSG, email));
-        }
+        return userRepository.save(user);
     }
 
     @Override
     public User updateById(long userId, User userWithUpdates) {
-        User currUser = userStorage.findById(userId)
+        User currUser = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId)));
 
         ifNotSameEmailsOrEmailExistsThrowException(userWithUpdates, currUser);
 
         updateFrom(currUser, userWithUpdates);
-        userStorage.update(currUser);
+        userRepository.save(currUser);
         return currUser;
     }
 
@@ -48,27 +39,25 @@ public class UserServiceImpl implements UserService {
         String newEmail = userWithUpdates.getEmail();
         log.info("Проверка наличия email = {} и его сравнение с email пользователя с id = {}" +
                 " перед обновлением пользователя", newEmail, currUser.getId());
-        if (!currUser.getEmail().equals(newEmail) && userStorage.hasEmail(newEmail)) {
+        if (!currUser.getEmail().equals(newEmail) && userRepository.existsByEmail(newEmail)) {
             throw new UserEmailAlreadyExist(String.format(EMAIL_EXISTS_MSG, newEmail));
         }
     }
 
     @Override
     public User getById(long userId) {
-        return userStorage.findById(userId)
+        return userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId)));
     }
 
     @Override
     public Collection<User> getAll() {
-        return userStorage.findAll();
+        return (Collection<User>) userRepository.findAll();
     }
 
     @Override
     public void deleteById(long userId) {
-        if (userStorage.deleteById(userId) == null) {
-            throw new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId));
-        }
+        userRepository.deleteById(userId);
     }
 
     private void updateFrom(User userToUpdate, User userWithUpdates) {

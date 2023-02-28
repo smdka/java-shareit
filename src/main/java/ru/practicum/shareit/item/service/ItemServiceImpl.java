@@ -6,11 +6,12 @@ import org.springframework.stereotype.Service;
 import ru.practicum.shareit.item.exception.ItemNotFoundException;
 import ru.practicum.shareit.item.exception.UserHasNoPermissionException;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.item.storage.ItemStorage;
+import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.exception.UserNotFoundException;
-import ru.practicum.shareit.user.storage.UserStorage;
+import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.function.Supplier;
 
 @Slf4j
@@ -20,16 +21,16 @@ public class ItemServiceImpl implements ItemService {
     private static final String USER_NOT_FOUND_MSG = "Пользователь с id = %d не найден";
     private static final String ITEM_NOT_FOUND_MSG = "Вещь с id = %d не найдена";
     private static final String NO_PERMISSION_MSG = "У пользователя с id = %d нет прав на изменение вещи с id = %d";
-    private final ItemStorage itemStorage;
-    private final UserStorage userStorage;
+    private final ItemRepository itemRepository;
+    private final UserRepository userRepository;
 
     @Override
     public Item add(Item item) {
-        return getIfUserExists(item.getOwnerId(), () -> itemStorage.save(item));
+        return getIfUserExists(item.getOwner().getId(), () -> itemRepository.save(item));
     }
 
     private <T> T getIfUserExists(long userId, Supplier<T> s) {
-        if (userStorage.hasUser(userId)) {
+        if (userRepository.existsById(userId)) {
             return s.get();
         }
         throw new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId));
@@ -37,42 +38,44 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public Item updateById(long itemId, Item itemWithUpdates) {
-        long ownerId = itemWithUpdates.getOwnerId();
-        Item currItem = getIfUserExists(ownerId, () -> itemStorage.findByItemId(itemId)
+        long ownerId = itemWithUpdates.getOwner().getId();
+        Item currItem = getIfUserExists(ownerId, () -> itemRepository.findById(itemId)
                 .orElseThrow(() -> new ItemNotFoundException(String.format(ITEM_NOT_FOUND_MSG, itemId))));
 
         checkForUserPermissionOrThrowException(ownerId, currItem);
 
-        updateFrom(currItem, itemWithUpdates);
-        itemStorage.update(currItem);
+        updateFromDto(currItem, itemWithUpdates);
+        itemRepository.save(currItem);
         return currItem;
     }
 
     private void checkForUserPermissionOrThrowException(long ownerId, Item currItem) {
         long itemId = currItem.getId();
         log.info("Проверка полномочий пользователя с id = {} для изменения вещи с id = {}", ownerId, itemId);
-        if (currItem.getOwnerId() != ownerId) {
+        if (currItem.getOwner().getId() != ownerId) {
             throw new UserHasNoPermissionException(String.format(NO_PERMISSION_MSG, ownerId, itemId));
         }
     }
 
     @Override
     public Item getByItemId(long itemId) {
-        return itemStorage.findByItemId(itemId)
+        return itemRepository.findById(itemId)
                 .orElseThrow(() -> new ItemNotFoundException(String.format(ITEM_NOT_FOUND_MSG, itemId)));
     }
 
     @Override
     public Collection<Item> getByUserId(long userId) {
-        return getIfUserExists(userId, () -> itemStorage.findByUserId(userId));
+        return getIfUserExists(userId, () -> itemRepository.findItemsByOwnerId(userId));
     }
 
     @Override
-    public Collection<Item> findIfContainsTextInNameOrDescription(String text) {
-        return itemStorage.findByTextAndUserId(text);
+    public Collection<Item> searchInNameOrDescription(String text) {
+        return text.isBlank() ?
+                Collections.emptyList() :
+                itemRepository.search(text);
     }
 
-    private void updateFrom(Item item, Item itemDto) {
+    private void updateFromDto(Item item, Item itemDto) {
         String newName = itemDto.getName();
         if (newName != null) {
             item.setName(newName);
