@@ -6,7 +6,9 @@ import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 
 import java.util.Collection;
+import java.util.Set;
 
+import static java.util.stream.Collectors.*;
 import static java.util.stream.Collectors.toList;
 
 public final class ItemMapper {
@@ -35,7 +37,7 @@ public final class ItemMapper {
         return item;
     }
 
-    public static OutputItemDto toOutputItemDto(Item item, Booking lastBooking, Booking nextBooking) {
+    public static OutcomingItemDto toOutputItemDto(Item item, Booking lastBooking, Booking nextBooking) {
         BookingDtoForItem last = null;
         if (lastBooking != null) {
             last = new BookingDtoForItem(lastBooking.getId(), lastBooking.getBooker().getId());
@@ -44,6 +46,9 @@ public final class ItemMapper {
         if (nextBooking != null) {
             next = new BookingDtoForItem(nextBooking.getId(), nextBooking.getBooker().getId());
         }
-        return new OutputItemDto(item.getId(), item.getName(), item.getDescription(), item.getAvailable(), last, next);
+        Set<CommentDto> comments = item.getComments().stream()
+                .map(comment -> CommentMapper.toCommentDto(comment, item.getOwner().getName()))
+                .collect(toSet());
+        return new OutcomingItemDto(item.getId(), item.getName(), item.getDescription(), item.getAvailable(), last, next, comments);
     }
 }

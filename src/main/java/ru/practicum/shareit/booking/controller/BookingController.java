@@ -38,21 +38,21 @@ public class BookingController {
 
     @GetMapping("/{bookingId}")
     public OutcomingBookingDto getBookingById(@PathVariable Long bookingId,
-                                     @NotNull @RequestHeader("X-Sharer-User-Id") Long userId) {
+                                              @NotNull @RequestHeader("X-Sharer-User-Id") Long userId) {
         log.info("Получен запрос GET /bookings/{} с заголовком X-Sharer-User-Id = {}", bookingId, userId);
         return BookingMapper.toOutcomingDto(bookingService.getById(bookingId, userId));
     }
 
     @GetMapping
     public Collection<OutcomingBookingDto> getBookingsForUser(@NotNull @RequestHeader("X-Sharer-User-Id") Long userId,
-                                                     @RequestParam(defaultValue = "ALL") State state) {
+                                                              @RequestParam(defaultValue = "ALL") State state) {
         log.info("Получен запрос GET /bookings?state={} с заголовком X-Sharer-User-Id = {}", state, userId);
         return BookingMapper.toOutcomingDtoAll(bookingService.getAllByUserId(userId, state));
     }
 
     @GetMapping("/owner")
     public Collection<OutcomingBookingDto> getBookingsForItemOwner(@NotNull @RequestHeader("X-Sharer-User-Id") Long itemOwnerId,
-                                                          @RequestParam(defaultValue = "ALL") State state) {
+                                                                   @RequestParam(defaultValue = "ALL") State state) {
         log.info("Получен запрос GET /bookings/owner?state={} с заголовком X-Sharer-User-Id = {}", state, itemOwnerId);
         return BookingMapper.toOutcomingDtoAll(bookingService.getAllForItemOwnerId(itemOwnerId, state));
     }

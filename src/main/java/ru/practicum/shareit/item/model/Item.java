@@ -1,10 +1,19 @@
 package ru.practicum.shareit.item.model;
 
 import lombok.Data;
-import ru.practicum.shareit.booking.dto.BookingDtoForItem;
 import ru.practicum.shareit.user.model.User;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+import java.util.Set;
 
 @Data
 @Entity
@@ -25,4 +34,8 @@ public class Item {
 
     @Column(name = "request_id")
     private Long requestId;
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "item")
+    Set<Comment> comments;
+
 }

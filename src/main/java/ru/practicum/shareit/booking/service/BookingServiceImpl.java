@@ -2,7 +2,6 @@ package ru.practicum.shareit.booking.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.exception.ItemNotAvailableException;
 import ru.practicum.shareit.booking.repository.State;
@@ -18,11 +17,7 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import javax.validation.ValidationException;
-import java.time.LocalDateTime;
 import java.util.Collection;
-import java.util.Map;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 @Slf4j
 @Service
@@ -36,13 +31,12 @@ public class BookingServiceImpl implements BookingService {
             "У пользователя с id = %d нет прав на изменение/получение бронирования с id = %d";
     private static final String BOOKING_DATETIME_ERROR_MSG =
             "Время окончания бронирования не может быть раньше начала бронирования";
-    private static final String ALREADY_BOOKED_MSG = "Предмет уже забронирован";
     private static final String CANT_CHANGE_STATUS_MSG = "Нельзя изменить статус с APPROVED";
     private static final String CANT_BOOK_BY_ITEM_OWNER_MSG = "Хозяин вещи не может создать бронь своей вещи";
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
-    private final Strategy strategy;
+    private final BookingsGetter bookingsGetter;
 
     @Override
     public Booking add(Long bookerId, Booking booking) {
@@ -120,7 +114,7 @@ public class BookingServiceImpl implements BookingService {
         if (!userRepository.existsById(userId)) {
             throw new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId));
         }
-       return strategy.forUser(userId, state);
+       return bookingsGetter.forUser(userId, state);
     }
 
     @Override
@@ -129,6 +123,6 @@ public class BookingServiceImpl implements BookingService {
             throw new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, itemOwnerId));
         }
         Collection<Long> itemIds = itemRepository.findIdsByOwnerId(itemOwnerId);
-        return strategy.forItemOwner(itemIds, state);
+        return bookingsGetter.forItemOwner(itemIds, state);
     }
 }

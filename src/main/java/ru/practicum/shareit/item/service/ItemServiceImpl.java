@@ -4,20 +4,27 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.booking.repository.State;
-import ru.practicum.shareit.booking.service.Strategy;
+import ru.practicum.shareit.booking.service.BookingsGetter;
+import ru.practicum.shareit.item.dto.*;
 import ru.practicum.shareit.item.exception.ItemNotFoundException;
 import ru.practicum.shareit.item.exception.UserHasNoPermissionException;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.exception.UserNotFoundException;
+import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
+import static java.util.Comparator.*;
 
 @Slf4j
 @Service
@@ -28,7 +35,9 @@ public class ItemServiceImpl implements ItemService {
     private static final String NO_PERMISSION_MSG = "У пользователя с id = %d нет прав на изменение вещи с id = %d";
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
-    private final Strategy strategy;
+    private final CommentRepository commentRepository;
+    private final BookingRepository bookingRepository;
+    private final BookingsGetter bookingsGetter;
 
     @Override
     public Item add(Item item) {
@@ -64,25 +73,41 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Map<Item, List<Booking>> getByItemId(long itemId, long userId) {
+    public OutcomingItemDto getByItemId(long itemId, long userId) {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new ItemNotFoundException(String.format(ITEM_NOT_FOUND_MSG, itemId)));
-        Booking nextBooking = null;
         Booking lastBooking = null;
+        Booking nextBooking = null;
         if (item.getOwner().getId().equals(userId)) {
-            nextBooking = strategy.forItemOwner(List.of(itemId), State.FUTURE).stream()
-                    .findFirst()
-                    .orElse(null);
-            lastBooking = strategy.forItemOwner(List.of(itemId), State.PAST).stream()
-                    .findFirst()
-                    .orElse(null);
+            lastBooking = getLastBooking(itemId);
+            nextBooking = getNextBooking(itemId);
         }
-        return Map.of(item, List.of(lastBooking, nextBooking));
+        return ItemMapper.toOutputItemDto(item, lastBooking, nextBooking);
     }
 
+    private Booking getLastBooking(long itemId) {
+        return bookingsGetter.forItemOwner(List.of(itemId), State.ALL).stream()
+                .filter(booking -> (!Booking.Status.REJECTED.equals(booking.getStatus())) &&
+                        booking.getEnd().isBefore(LocalDateTime.now()))
+                .min(comparing(Booking::getStart))
+                .orElse(null);
+    }
+
+    private Booking getNextBooking(long itemId) {
+        return bookingsGetter.forItemOwner(List.of(itemId), State.ALL).stream()
+                .filter(booking -> (!Booking.Status.REJECTED.equals(booking.getStatus())) &&
+                        booking.getStart().isAfter(LocalDateTime.now()))
+                .min(comparing(Booking::getStart))
+                .orElse(null);
+    }
+
+
     @Override
-    public Collection<Item> getByUserId(long userId) {
-        return getIfUserExists(userId, () -> itemRepository.findItemsByOwnerId(userId));
+    public Collection<OutcomingItemDto> getByUserId(long userId) {
+        Collection<Item> items = getIfUserExists(userId, () -> itemRepository.findItemsByOwnerId(userId));
+        return items.stream()
+                .map(item -> ItemMapper.toOutputItemDto(item, getLastBooking(item.getId()), getNextBooking(item.getId())))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -90,6 +115,21 @@ public class ItemServiceImpl implements ItemService {
         return text.isBlank() ?
                 Collections.emptyList() :
                 itemRepository.search(text);
+    }
+
+    @Override
+    public CommentDto addComment(String text, Long authorId, Long itemId) {
+        String authorName = userRepository.findById(authorId)
+                .map(User::getName)
+                .orElseThrow(() -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, authorId)));
+        if (!itemRepository.existsById(itemId)) {
+            throw new ItemNotFoundException(String.format(ITEM_NOT_FOUND_MSG, itemId));
+        }
+        if (bookingRepository.findAllByItemIdAndBookerId(itemId, authorId).isEmpty()) {
+            throw new UserHasNoPermissionException("Пользователь не может оставить комментарий");
+        }
+        log.info("Комментарий добавлен");
+        return CommentMapper.toCommentDto(commentRepository.save(CommentMapper.toComment(text, authorId, itemId)), authorName);
     }
 
     private void updateFromDto(Item item, Item itemDto) {

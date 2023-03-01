@@ -2,16 +2,10 @@ package ru.practicum.shareit.user.model;
 
 import lombok.Data;
 import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.util.Set;
 
 @Data
@@ -32,4 +26,6 @@ public class User {
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "booker")
     private Set<Booking> bookings;
+    @OneToOne(mappedBy = "author")
+    private Comment comment;
 }

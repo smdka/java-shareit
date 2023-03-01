@@ -7,9 +7,11 @@ import ru.practicum.shareit.booking.model.Booking;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.Optional;
 
 @Repository
 public interface BookingRepository extends CrudRepository<Booking, Long> {
+    Collection<Booking> findAllByItemIdAndBookerId(Long itemId, Long bookerId);
     Collection<Booking> findAllByBookerId(Long bookerId, Sort sort);
     Collection<Booking> findAllByBookerIdAndStatus(Long bookerId, Booking.Status status, Sort sort);
     Collection<Booking> findAllByBookerIdAndEndBefore(Long bookerId, LocalDateTime ldt, Sort sort);
