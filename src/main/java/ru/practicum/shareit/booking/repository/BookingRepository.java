@@ -7,7 +7,6 @@ import ru.practicum.shareit.booking.model.Booking;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
-import java.util.Optional;
 
 @Repository
 public interface BookingRepository extends CrudRepository<Booking, Long> {

@@ -21,11 +21,6 @@ public class User {
     @Column(unique = true)
     private String email;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "owner")
-    private Set<Item> items;
-
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "booker")
-    private Set<Booking> bookings;
     @OneToOne(mappedBy = "author")
     private Comment comment;
 }

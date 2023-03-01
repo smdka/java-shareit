@@ -10,6 +10,7 @@ import ru.practicum.shareit.booking.service.BookingsGetter;
 import ru.practicum.shareit.item.dto.*;
 import ru.practicum.shareit.item.exception.ItemNotFoundException;
 import ru.practicum.shareit.item.exception.UserHasNoPermissionException;
+import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
@@ -82,7 +83,8 @@ public class ItemServiceImpl implements ItemService {
             lastBooking = getLastBooking(itemId);
             nextBooking = getNextBooking(itemId);
         }
-        return ItemMapper.toOutputItemDto(item, lastBooking, nextBooking);
+        Collection<Comment> comments = commentRepository.findAllByItemId(itemId);
+        return ItemMapper.toOutputItemDto(item, lastBooking, nextBooking, comments);
     }
 
     private Booking getLastBooking(long itemId) {
@@ -106,7 +108,7 @@ public class ItemServiceImpl implements ItemService {
     public Collection<OutcomingItemDto> getByUserId(long userId) {
         Collection<Item> items = getIfUserExists(userId, () -> itemRepository.findItemsByOwnerId(userId));
         return items.stream()
-                .map(item -> ItemMapper.toOutputItemDto(item, getLastBooking(item.getId()), getNextBooking(item.getId())))
+                .map(item -> ItemMapper.toOutputItemDto(item, getLastBooking(item.getId()), getNextBooking(item.getId()), commentRepository.findAllByItemId(item.getId())))
                 .collect(Collectors.toList());
     }
 
@@ -125,10 +127,12 @@ public class ItemServiceImpl implements ItemService {
         if (!itemRepository.existsById(itemId)) {
             throw new ItemNotFoundException(String.format(ITEM_NOT_FOUND_MSG, itemId));
         }
-        if (bookingRepository.findAllByItemIdAndBookerId(itemId, authorId).isEmpty()) {
-            throw new UserHasNoPermissionException("Пользователь не может оставить комментарий");
+        Collection<Booking> bookings = bookingsGetter.forUser(authorId, State.ALL);
+        boolean isAuthorBooking = bookings.stream()
+                .anyMatch(b -> b.getItem().getId().equals(itemId) && !b.getStatus().equals(Booking.Status.REJECTED));
+        if (!isAuthorBooking) {
+            throw new UserHasNoPermissionException("Пользователь не может оставлять комментарий");
         }
-        log.info("Комментарий добавлен");
         return CommentMapper.toCommentDto(commentRepository.save(CommentMapper.toComment(text, authorId, itemId)), authorName);
     }
 

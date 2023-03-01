@@ -34,8 +34,4 @@ public class Item {
 
     @Column(name = "request_id")
     private Long requestId;
-
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "item")
-    Set<Comment> comments;
-
 }

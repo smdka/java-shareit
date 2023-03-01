@@ -3,7 +3,7 @@ package ru.practicum.shareit.item.dto;
 import lombok.Value;
 import ru.practicum.shareit.booking.dto.BookingDtoForItem;
 
-import java.util.Set;
+import java.util.List;
 
 @Value
 public class OutcomingItemDto {
@@ -13,6 +13,5 @@ public class OutcomingItemDto {
     Boolean available;
     BookingDtoForItem lastBooking;
     BookingDtoForItem nextBooking;
-    Set<CommentDto> comments;
-    
+    List<CommentDto> comments;
 }

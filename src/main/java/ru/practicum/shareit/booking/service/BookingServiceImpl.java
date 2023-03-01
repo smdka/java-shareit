@@ -56,7 +56,7 @@ public class BookingServiceImpl implements BookingService {
         }
 
         if (item.getOwner().getId().equals(bookerId)) {
-            throw new UserHasNoPermissionException(CANT_BOOK_BY_ITEM_OWNER_MSG);
+            throw new BookingNotFoundException(CANT_BOOK_BY_ITEM_OWNER_MSG);
         }
 
         Booking savedBooking = bookingRepository.save(booking);
@@ -83,7 +83,7 @@ public class BookingServiceImpl implements BookingService {
         Long ownerId = item.getOwner().getId();
 
         if (!userId.equals(ownerId)) {
-            throw new UserHasNoPermissionException(String.format(NO_PERMISSION_MSG, userId, item.getId()));
+            throw new BookingNotFoundException(String.format(NO_PERMISSION_MSG, userId, item.getId()));
         }
         if (approved) {
             booking.setStatus(Booking.Status.APPROVED);
@@ -106,7 +106,7 @@ public class BookingServiceImpl implements BookingService {
         if (bookerId.equals(userId) || itemOwnerId.equals(userId)) {
             return booking;
         }
-        throw new UserHasNoPermissionException(String.format(NO_PERMISSION_MSG, userId, bookingId));
+        throw new BookingNotFoundException(String.format(NO_PERMISSION_MSG, userId, bookingId));
     }
 
     @Override

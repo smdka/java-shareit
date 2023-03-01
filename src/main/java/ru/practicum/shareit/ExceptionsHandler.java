@@ -76,10 +76,10 @@ public class ExceptionsHandler {
     }
 
     @ExceptionHandler
-    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Map<HttpStatus, String> handleNoPermission(final UserHasNoPermissionException e) {
         log.warn(e.getMessage());
-        return Map.of(HttpStatus.NOT_FOUND, e.getMessage());
+        return Map.of(HttpStatus.BAD_REQUEST, e.getMessage());
     }
 
     @ExceptionHandler

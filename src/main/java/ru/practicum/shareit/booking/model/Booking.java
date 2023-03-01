@@ -1,7 +1,6 @@
 package ru.practicum.shareit.booking.model;
 
 import lombok.Data;
-import org.hibernate.annotations.ColumnDefault;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 
