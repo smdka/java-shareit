@@ -24,15 +24,13 @@ public final class ItemMapper {
                 .collect(toList());
     }
 
-    public static Item toItem(ItemDto itemDto, long ownerId) {
+    public static Item toItem(ItemDto itemDto, User owner) {
         Item item = new Item();
         item.setId(itemDto.getId());
         item.setName(itemDto.getName());
         item.setDescription(itemDto.getDescription());
         item.setAvailable(itemDto.getAvailable());
-        User user = new User();
-        user.setId(ownerId);
-        item.setOwner(user);
+        item.setOwner(owner);
         return item;
     }
 
