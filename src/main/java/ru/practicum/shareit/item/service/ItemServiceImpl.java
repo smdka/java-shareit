@@ -3,14 +3,13 @@ package ru.practicum.shareit.item.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.model.Booking;
-import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.booking.repository.State;
 import ru.practicum.shareit.booking.service.BookingsGetter;
 import ru.practicum.shareit.item.dto.*;
 import ru.practicum.shareit.item.exception.ItemNotFoundException;
 import ru.practicum.shareit.item.exception.UserHasNoPermissionException;
-import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
@@ -29,6 +28,7 @@ import static java.util.Comparator.*;
 
 @Slf4j
 @Service
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class ItemServiceImpl implements ItemService {
     private static final String USER_NOT_FOUND_MSG = "Пользователь с id = %d не найден";
@@ -36,13 +36,14 @@ public class ItemServiceImpl implements ItemService {
     private static final String NO_PERMISSION_MSG = "У пользователя с id = %d нет прав на изменение вещи с id = %d";
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
-    private final CommentRepository commentRepository;
-    private final BookingRepository bookingRepository;
     private final BookingsGetter bookingsGetter;
+    private final CommentRepository commentRepository;
 
     @Override
-    public Item add(Item item) {
-        return getIfUserExists(item.getOwner().getId(), () -> itemRepository.save(item));
+    @Transactional
+    public ItemDto add(ItemDto itemDto, Long ownerId) {
+        Item item = ItemMapper.toItem(itemDto, ownerId);
+        return ItemMapper.toItemDto(getIfUserExists(ownerId, () -> itemRepository.save(item)));
     }
 
     private <T> T getIfUserExists(long userId, Supplier<T> s) {
@@ -52,17 +53,16 @@ public class ItemServiceImpl implements ItemService {
         throw new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId));
     }
 
-    @Override
-    public Item updateById(long itemId, Item itemWithUpdates) {
-        long ownerId = itemWithUpdates.getOwner().getId();
+    @Transactional
+    public ItemDto updateById(Long itemId, ItemDto itemWithUpdates, Long ownerId) {
         Item currItem = getIfUserExists(ownerId, () -> itemRepository.findById(itemId)
                 .orElseThrow(() -> new ItemNotFoundException(String.format(ITEM_NOT_FOUND_MSG, itemId))));
 
         checkForUserPermissionOrThrowException(ownerId, currItem);
 
         updateFromDto(currItem, itemWithUpdates);
-        itemRepository.save(currItem);
-        return currItem;
+
+        return ItemMapper.toItemDto(itemRepository.save(currItem));
     }
 
     private void checkForUserPermissionOrThrowException(long ownerId, Item currItem) {
@@ -83,8 +83,7 @@ public class ItemServiceImpl implements ItemService {
             lastBooking = getLastBooking(itemId);
             nextBooking = getNextBooking(itemId);
         }
-        Collection<Comment> comments = commentRepository.findAllByItemId(itemId);
-        return ItemMapper.toOutputItemDto(item, lastBooking, nextBooking, comments);
+        return ItemMapper.toOutputItemDto(item, lastBooking, nextBooking);
     }
 
     private Booking getLastBooking(long itemId) {
@@ -108,35 +107,41 @@ public class ItemServiceImpl implements ItemService {
     public Collection<OutcomingItemDto> getByUserId(long userId) {
         Collection<Item> items = getIfUserExists(userId, () -> itemRepository.findItemsByOwnerId(userId));
         return items.stream()
-                .map(item -> ItemMapper.toOutputItemDto(item, getLastBooking(item.getId()), getNextBooking(item.getId()), commentRepository.findAllByItemId(item.getId())))
+                .map(item -> ItemMapper.toOutputItemDto(item, getLastBooking(item.getId()), getNextBooking(item.getId())))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public Collection<Item> searchInNameOrDescription(String text) {
+    public Collection<ItemDto> searchInNameOrDescription(String text) {
         return text.isBlank() ?
                 Collections.emptyList() :
-                itemRepository.search(text);
+                ItemMapper.toItemDtoAll(itemRepository.search(text));
     }
 
     @Override
+    @Transactional
     public CommentDto addComment(String text, Long authorId, Long itemId) {
-        String authorName = userRepository.findById(authorId)
-                .map(User::getName)
+        User user = userRepository.findById(authorId)
                 .orElseThrow(() -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, authorId)));
-        if (!itemRepository.existsById(itemId)) {
-            throw new ItemNotFoundException(String.format(ITEM_NOT_FOUND_MSG, itemId));
-        }
-        Collection<Booking> bookings = bookingsGetter.forUser(authorId, State.ALL);
-        boolean isAuthorBooking = bookings.stream()
-                .anyMatch(b -> b.getItem().getId().equals(itemId) && !b.getStatus().equals(Booking.Status.REJECTED));
-        if (!isAuthorBooking) {
-            throw new UserHasNoPermissionException("Пользователь не может оставлять комментарий");
-        }
-        return CommentMapper.toCommentDto(commentRepository.save(CommentMapper.toComment(text, authorId, itemId)), authorName);
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new ItemNotFoundException(String.format(ITEM_NOT_FOUND_MSG, itemId)));
+        Collection<Booking> bookings = bookingsGetter.forUser(authorId, State.PAST);
+
+        ifNotBookingAuthorThrowNoPermissionException(itemId, bookings);
+
+        return CommentMapper.toCommentDto(commentRepository.save(CommentMapper.toComment(text, user, item)));
     }
 
-    private void updateFromDto(Item item, Item itemDto) {
+    private void ifNotBookingAuthorThrowNoPermissionException(Long itemId, Collection<Booking> bookings) {
+        boolean isBookingAuthor = bookings.stream()
+                .anyMatch(b -> b.getItem().getId().equals(itemId) &&
+                        !b.getStatus().equals(Booking.Status.REJECTED));
+        if (!isBookingAuthor) {
+            throw new UserHasNoPermissionException("Пользователь не может оставлять комментарий");
+        }
+    }
+
+    private void updateFromDto(Item item, ItemDto itemDto) {
         String newName = itemDto.getName();
         if (newName != null) {
             item.setName(newName);

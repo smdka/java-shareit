@@ -1,12 +1,17 @@
 package ru.practicum.shareit.user.model;
 
 import lombok.Data;
-import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.item.model.Comment;
-import ru.practicum.shareit.item.model.Item;
 
-import javax.persistence.*;
-import java.util.Set;
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.OneToMany;
+import javax.persistence.Table;
+import java.util.List;
 
 @Data
 @Entity
@@ -21,6 +26,6 @@ public class User {
     @Column(unique = true)
     private String email;
 
-    @OneToOne(mappedBy = "author")
-    private Comment comment;
+    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL)
+    private List<Comment> comments;
 }

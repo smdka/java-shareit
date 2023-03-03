@@ -49,6 +49,13 @@ public class ExceptionsHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Map<String, String> handleIllegalStateException(final IllegalStateException e) {
+        log.warn(e.getMessage());
+        return Map.of("error", e.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Map<HttpStatus, String> handleItemAvailabilityExceptions(final ItemNotAvailableException e) {
         log.warn(e.getMessage());
         return Map.of(HttpStatus.BAD_REQUEST, e.getMessage());

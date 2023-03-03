@@ -3,6 +3,9 @@ package ru.practicum.shareit.user.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.dto.UserMapper;
 import ru.practicum.shareit.user.exception.UserEmailAlreadyExist;
 import ru.practicum.shareit.user.exception.UserNotFoundException;
 import ru.practicum.shareit.user.model.User;
@@ -12,6 +15,7 @@ import java.util.Collection;
 
 @Slf4j
 @Service
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private static final String USER_NOT_FOUND_MSG = "Пользователь с id = %d не найден";
@@ -19,20 +23,23 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
     @Override
-    public User add(User user) {
-        return userRepository.save(user);
+    @Transactional
+    public UserDto add(UserDto userDto) {
+        return UserMapper.toUserDto(userRepository.save(UserMapper.toUser(userDto)));
     }
 
     @Override
-    public User updateById(long userId, User userWithUpdates) {
+    @Transactional
+    public UserDto updateById(long userId, UserDto userWithUpdates) {
+        User patchedUser = UserMapper.toUser(userWithUpdates);
         User currUser = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId)));
 
-        ifNotSameEmailsOrEmailExistsThrowException(userWithUpdates, currUser);
+        ifNotSameEmailsOrEmailExistsThrowException(patchedUser, currUser);
 
-        updateFrom(currUser, userWithUpdates);
+        updateFromDto(currUser, patchedUser);
         userRepository.save(currUser);
-        return currUser;
+        return UserMapper.toUserDto(currUser);
     }
 
     private void ifNotSameEmailsOrEmailExistsThrowException(User userWithUpdates, User currUser) {
@@ -45,22 +52,24 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User getById(long userId) {
-        return userRepository.findById(userId)
+    public UserDto getById(long userId) {
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId)));
+        return UserMapper.toUserDto(user);
     }
 
     @Override
-    public Collection<User> getAll() {
-        return (Collection<User>) userRepository.findAll();
+    public Collection<UserDto> getAll() {
+        return UserMapper.toUserDtoAll((Collection<User>) userRepository.findAll());
     }
 
     @Override
+    @Transactional
     public void deleteById(long userId) {
         userRepository.deleteById(userId);
     }
 
-    private void updateFrom(User userToUpdate, User userWithUpdates) {
+    private void updateFromDto(User userToUpdate, User userWithUpdates) {
         String newName = userWithUpdates.getName();
         if (newName != null) {
              userToUpdate.setName(newName);

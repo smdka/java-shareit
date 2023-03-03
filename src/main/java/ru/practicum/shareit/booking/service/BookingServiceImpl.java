@@ -3,13 +3,16 @@ package ru.practicum.shareit.booking.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.booking.dto.BookingMapper;
+import ru.practicum.shareit.booking.dto.IncomingBookingDto;
+import ru.practicum.shareit.booking.dto.OutcomingBookingDto;
 import ru.practicum.shareit.booking.exception.ItemNotAvailableException;
 import ru.practicum.shareit.booking.repository.State;
 import ru.practicum.shareit.booking.exception.BookingNotFoundException;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.item.exception.ItemNotFoundException;
-import ru.practicum.shareit.item.exception.UserHasNoPermissionException;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.exception.UserNotFoundException;
@@ -21,6 +24,7 @@ import java.util.Collection;
 
 @Slf4j
 @Service
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class BookingServiceImpl implements BookingService {
     private static final String USER_NOT_FOUND_MSG = "Пользователь с id = %d не найден";
@@ -38,11 +42,11 @@ public class BookingServiceImpl implements BookingService {
     private final BookingRepository bookingRepository;
     private final BookingsGetter bookingsGetter;
 
-    @Override
-    public Booking add(Long bookerId, Booking booking) {
-        if (booking.getEnd().isBefore(booking.getStart())) {
-            throw new ValidationException(BOOKING_DATETIME_ERROR_MSG);
-        }
+    @Transactional
+    public OutcomingBookingDto add(Long bookerId, IncomingBookingDto incomingBookingDto) {
+        Booking booking = BookingMapper.toBooking(incomingBookingDto, bookerId);
+
+        validateBookingDatesOrThrow(booking);
 
         User booker = userRepository.findById(bookerId).orElseThrow(
                 () -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, bookerId)));
@@ -51,78 +55,96 @@ public class BookingServiceImpl implements BookingService {
         Item item = itemRepository.findById(itemId).orElseThrow(
                 () -> new ItemNotFoundException(String.format(ITEM_NOT_FOUND_MSG, itemId)));
 
-        if (!item.getAvailable()) {
-            throw new ItemNotAvailableException(String.format(ITEM_NOT_AVAILABLE_MSG, itemId));
-        }
+        ifItemNotAvailableThrow(itemId, item);
 
+        ifUserEqualsOwnerThrow(bookerId, item);
+
+        booking.setBooker(booker);
+        booking.setItem(item);
+
+        return BookingMapper.toOutcomingDto(bookingRepository.save(booking));
+    }
+
+    private void ifUserEqualsOwnerThrow(Long bookerId, Item item) {
         if (item.getOwner().getId().equals(bookerId)) {
             throw new BookingNotFoundException(CANT_BOOK_BY_ITEM_OWNER_MSG);
         }
+    }
 
-        Booking savedBooking = bookingRepository.save(booking);
+    private void ifItemNotAvailableThrow(Long itemId, Item item) {
+        if (Boolean.FALSE.equals(item.getAvailable())) {
+            throw new ItemNotAvailableException(String.format(ITEM_NOT_AVAILABLE_MSG, itemId));
+        }
+    }
 
-        savedBooking.setBooker(booker);
-        savedBooking.setItem(item);
-        return savedBooking;
+    private void validateBookingDatesOrThrow(Booking booking) {
+        if (booking.getEnd().isBefore(booking.getStart())) {
+            throw new ValidationException(BOOKING_DATETIME_ERROR_MSG);
+        }
     }
 
     @Override
-    public Booking changeStatus(Long bookingId, Boolean approved, Long userId) {
-        if (!userRepository.existsById(userId)) {
-            throw new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId));
-        }
+    @Transactional
+    public OutcomingBookingDto changeStatus(Long bookingId, Boolean approved, Long userId) {
+        ifUserDoesntExistThrow(userId);
 
         Booking booking = bookingRepository.findById(bookingId).orElseThrow(
                 () -> new BookingNotFoundException(String.format(BOOKING_NOT_FOUND_MSG, bookingId)));
 
-        if (booking.getStatus().equals(Booking.Status.APPROVED)) {
-            throw new IllegalArgumentException(CANT_CHANGE_STATUS_MSG);
-        }
+        ifBookingIsApprovedThrow(booking);
 
         Item item = booking.getItem();
         Long ownerId = item.getOwner().getId();
 
+        ifUserNotEqualsOwnerThrow(userId, item, ownerId);
+
+        booking.setStatus(Boolean.TRUE.equals(approved) ? Booking.Status.APPROVED : Booking.Status.REJECTED);
+        return BookingMapper.toOutcomingDto(bookingRepository.save(booking));
+    }
+
+    private void ifUserNotEqualsOwnerThrow(Long userId, Item item, Long ownerId) {
         if (!userId.equals(ownerId)) {
             throw new BookingNotFoundException(String.format(NO_PERMISSION_MSG, userId, item.getId()));
         }
-        if (approved) {
-            booking.setStatus(Booking.Status.APPROVED);
-        } else {
-            booking.setStatus(Booking.Status.REJECTED);
-        }
-        return bookingRepository.save(booking);
     }
 
-    @Override
-    public Booking getById(Long bookingId, Long userId) {
+    private void ifBookingIsApprovedThrow(Booking booking) {
+        if (booking.getStatus().equals(Booking.Status.APPROVED)) {
+            throw new IllegalArgumentException(CANT_CHANGE_STATUS_MSG);
+        }
+    }
+
+    private void ifUserDoesntExistThrow(Long userId) {
         if (!userRepository.existsById(userId)) {
             throw new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId));
         }
+    }
+
+    @Override
+    public OutcomingBookingDto getById(Long bookingId, Long userId) {
+        ifUserDoesntExistThrow(userId);
 
         Booking booking = bookingRepository.findById(bookingId).orElseThrow(
                 () -> new BookingNotFoundException(String.format(BOOKING_NOT_FOUND_MSG, bookingId)));
+
         Long bookerId = booking.getBooker().getId();
         Long itemOwnerId = booking.getItem().getOwner().getId();
         if (bookerId.equals(userId) || itemOwnerId.equals(userId)) {
-            return booking;
+            return BookingMapper.toOutcomingDto(booking);
         }
         throw new BookingNotFoundException(String.format(NO_PERMISSION_MSG, userId, bookingId));
     }
 
     @Override
-    public Collection<Booking> getAllByUserId(Long userId, State state) {
-        if (!userRepository.existsById(userId)) {
-            throw new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId));
-        }
-       return bookingsGetter.forUser(userId, state);
+    public Collection<OutcomingBookingDto> getAllByUserId(Long userId, State state) {
+        ifUserDoesntExistThrow(userId);
+        return BookingMapper.toOutcomingDtoAll(bookingsGetter.forUser(userId, state));
     }
 
     @Override
-    public Collection<Booking> getAllForItemOwnerId(Long itemOwnerId, State state) {
-        if (!userRepository.existsById(itemOwnerId)) {
-            throw new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, itemOwnerId));
-        }
+    public Collection<OutcomingBookingDto> getAllForItemOwnerId(Long itemOwnerId, State state) {
+        ifUserDoesntExistThrow(itemOwnerId);
         Collection<Long> itemIds = itemRepository.findIdsByOwnerId(itemOwnerId);
-        return bookingsGetter.forItemOwner(itemIds, state);
+        return BookingMapper.toOutcomingDtoAll(bookingsGetter.forItemOwner(itemIds, state));
     }
 }

@@ -14,21 +14,6 @@ public class BookingMapper {
     private BookingMapper() {
     }
 
-    public static IncomingBookingDto toDto(Booking booking) {
-        return new IncomingBookingDto(booking.getId(),
-                booking.getStart(),
-                booking.getEnd(),
-                booking.getStatus(),
-                booking.getBooker().getId(),
-                booking.getItem().getId());
-    }
-
-    public static Collection<IncomingBookingDto> toDtoAll(Collection<Booking> bookings) {
-        return bookings.stream()
-                .map(BookingMapper::toDto)
-                .collect(Collectors.toList());
-    }
-
     public static OutcomingBookingDto toOutcomingDto(Booking booking) {
         return new OutcomingBookingDto(booking.getId(),
                 booking.getStart(),

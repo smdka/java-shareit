@@ -7,7 +7,6 @@ import ru.practicum.shareit.item.dto.*;
 import ru.practicum.shareit.item.service.ItemService;
 
 import javax.validation.Valid;
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.Collection;
 
@@ -22,7 +21,7 @@ public class ItemController {
     public ItemDto postItem(@NotNull @RequestHeader("X-Sharer-User-Id") Long ownerId,
                             @Valid @RequestBody ItemDto item) {
         log.info("Получен запрос POST /items с заголовком X-Sharer-User-Id = {}", ownerId);
-        return ItemMapper.toItemDto(itemService.add(ItemMapper.toItem(item, ownerId)));
+        return itemService.add(item, ownerId);
     }
 
     @PostMapping("/{itemId}/comment")
@@ -38,7 +37,7 @@ public class ItemController {
                              @NotNull @RequestHeader("X-Sharer-User-Id") Long userId,
                              @RequestBody ItemDto itemWithUpdates) {
         log.info("Получен запрос PATCH /items/{} с заголовком X-Sharer-User-Id = {}", itemId, userId);
-        return ItemMapper.toItemDto(itemService.updateById(itemId, ItemMapper.toItem(itemWithUpdates, userId)));
+        return itemService.updateById(itemId, itemWithUpdates, userId);
     }
 
     @GetMapping("/{itemId}")
@@ -58,6 +57,6 @@ public class ItemController {
     public Collection<ItemDto> search(@RequestParam String text,
                                       @NotNull @RequestHeader("X-Sharer-User-Id") Long userId) {
         log.info("Получен запрос GET /items/search?text={} с заголовком X-Sharer-User-Id = {}", text, userId);
-        return ItemMapper.toItemDtoAll(itemService.searchInNameOrDescription(text));
+        return itemService.searchInNameOrDescription(text);
     }
 }

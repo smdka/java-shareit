@@ -22,7 +22,7 @@ public final class UserMapper {
         return user;
     }
 
-    public static Collection<UserDto> toUserDtoAll(Collection<? extends User> users) {
+    public static Collection<UserDto> toUserDtoAll(Collection<User> users) {
         return users.stream()
                 .map(UserMapper::toUserDto)
                 .collect(toList());
