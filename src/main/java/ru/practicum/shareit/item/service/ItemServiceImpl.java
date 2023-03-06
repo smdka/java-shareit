@@ -3,76 +3,147 @@ package ru.practicum.shareit.item.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.booking.service.State;
+import ru.practicum.shareit.booking.service.BookingsGetter;
+import ru.practicum.shareit.item.dto.*;
 import ru.practicum.shareit.item.exception.ItemNotFoundException;
 import ru.practicum.shareit.item.exception.UserHasNoPermissionException;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.item.storage.ItemStorage;
+import ru.practicum.shareit.item.repository.CommentRepository;
+import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.exception.UserNotFoundException;
-import ru.practicum.shareit.user.storage.UserStorage;
+import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.user.repository.UserRepository;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
+import static java.util.Comparator.*;
 
 @Slf4j
 @Service
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class ItemServiceImpl implements ItemService {
     private static final String USER_NOT_FOUND_MSG = "Пользователь с id = %d не найден";
     private static final String ITEM_NOT_FOUND_MSG = "Вещь с id = %d не найдена";
     private static final String NO_PERMISSION_MSG = "У пользователя с id = %d нет прав на изменение вещи с id = %d";
-    private final ItemStorage itemStorage;
-    private final UserStorage userStorage;
+    private final ItemRepository itemRepository;
+    private final UserRepository userRepository;
+    private final BookingsGetter bookingsGetter;
+    private final CommentRepository commentRepository;
 
     @Override
-    public Item add(Item item) {
-        return getIfUserExists(item.getOwnerId(), () -> itemStorage.save(item));
+    @Transactional
+    public ItemDto add(ItemDto itemDto, Long ownerId) {
+        User user = userRepository.findById(ownerId)
+                .orElseThrow(() -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, ownerId)));
+        Item item = ItemMapper.toItem(itemDto, user);
+        return ItemMapper.toItemDto(getIfUserExists(ownerId, () -> itemRepository.save(item)));
     }
 
     private <T> T getIfUserExists(long userId, Supplier<T> s) {
-        if (userStorage.hasUser(userId)) {
+        if (userRepository.existsById(userId)) {
             return s.get();
         }
         throw new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId));
     }
 
-    @Override
-    public Item updateById(long itemId, Item itemWithUpdates) {
-        long ownerId = itemWithUpdates.getOwnerId();
-        Item currItem = getIfUserExists(ownerId, () -> itemStorage.findByItemId(itemId)
+    @Transactional
+    public ItemDto updateById(Long itemId, ItemDto itemWithUpdates, Long ownerId) {
+        Item currItem = getIfUserExists(ownerId, () -> itemRepository.findById(itemId)
                 .orElseThrow(() -> new ItemNotFoundException(String.format(ITEM_NOT_FOUND_MSG, itemId))));
 
         checkForUserPermissionOrThrowException(ownerId, currItem);
 
-        updateFrom(currItem, itemWithUpdates);
-        itemStorage.update(currItem);
-        return currItem;
+        updateFromDto(currItem, itemWithUpdates);
+
+        return ItemMapper.toItemDto(itemRepository.save(currItem));
     }
 
     private void checkForUserPermissionOrThrowException(long ownerId, Item currItem) {
         long itemId = currItem.getId();
         log.info("Проверка полномочий пользователя с id = {} для изменения вещи с id = {}", ownerId, itemId);
-        if (currItem.getOwnerId() != ownerId) {
+        if (currItem.getOwner().getId() != ownerId) {
             throw new UserHasNoPermissionException(String.format(NO_PERMISSION_MSG, ownerId, itemId));
         }
     }
 
     @Override
-    public Item getByItemId(long itemId) {
-        return itemStorage.findByItemId(itemId)
+    public OutcomingItemDto getByItemId(long itemId, long userId) {
+        Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new ItemNotFoundException(String.format(ITEM_NOT_FOUND_MSG, itemId)));
+        Booking lastBooking = null;
+        Booking nextBooking = null;
+        if (item.getOwner().getId().equals(userId)) {
+            lastBooking = getLastBooking(itemId);
+            nextBooking = getNextBooking(itemId);
+        }
+        return ItemMapper.toOutputItemDto(item, lastBooking, nextBooking);
+    }
+
+    private Booking getLastBooking(long itemId) {
+        return bookingsGetter.forItemOwner(List.of(itemId), State.ALL).stream()
+                .filter(booking -> (!Booking.Status.REJECTED.equals(booking.getStatus())) &&
+                        booking.getEnd().isBefore(LocalDateTime.now()))
+                .min(comparing(Booking::getStart))
+                .orElse(null);
+    }
+
+    private Booking getNextBooking(long itemId) {
+        return bookingsGetter.forItemOwner(List.of(itemId), State.ALL).stream()
+                .filter(booking -> (!Booking.Status.REJECTED.equals(booking.getStatus())) &&
+                        booking.getStart().isAfter(LocalDateTime.now()))
+                .min(comparing(Booking::getStart))
+                .orElse(null);
+    }
+
+
+    @Override
+    public Collection<OutcomingItemDto> getByUserId(long userId) {
+        Collection<Item> items = getIfUserExists(userId, () -> itemRepository.findItemsByOwnerId(userId));
+        return items.stream()
+                .map(item -> ItemMapper.toOutputItemDto(item, getLastBooking(item.getId()), getNextBooking(item.getId())))
+                .collect(Collectors.toList());
     }
 
     @Override
-    public Collection<Item> getByUserId(long userId) {
-        return getIfUserExists(userId, () -> itemStorage.findByUserId(userId));
+    public Collection<ItemDto> searchInNameOrDescription(String text) {
+        return text.isBlank() ?
+                Collections.emptyList() :
+                ItemMapper.toItemDtoAll(itemRepository.search(text));
     }
 
     @Override
-    public Collection<Item> findIfContainsTextInNameOrDescription(String text) {
-        return itemStorage.findByTextAndUserId(text);
+    @Transactional
+    public CommentDto addComment(String text, Long authorId, Long itemId) {
+        User user = userRepository.findById(authorId)
+                .orElseThrow(() -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, authorId)));
+        Item item = itemRepository.findById(itemId)
+                .orElseThrow(() -> new ItemNotFoundException(String.format(ITEM_NOT_FOUND_MSG, itemId)));
+        Collection<Booking> bookings = bookingsGetter.forUser(authorId, State.PAST);
+
+        ifNotBookingAuthorThrowNoPermissionException(itemId, bookings);
+
+        return CommentMapper.toCommentDto(commentRepository.save(CommentMapper.toComment(text, user, item)));
     }
 
-    private void updateFrom(Item item, Item itemDto) {
+    private void ifNotBookingAuthorThrowNoPermissionException(Long itemId, Collection<Booking> bookings) {
+        boolean isBookingAuthor = bookings.stream()
+                .anyMatch(b -> b.getItem().getId().equals(itemId) &&
+                        !b.getStatus().equals(Booking.Status.REJECTED));
+        if (!isBookingAuthor) {
+            throw new UserHasNoPermissionException("Пользователь не может оставлять комментарий");
+        }
+    }
+
+    private void updateFromDto(Item item, ItemDto itemDto) {
         String newName = itemDto.getName();
         if (newName != null) {
             item.setName(newName);
