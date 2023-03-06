@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.practicum.shareit.booking.dto.IncomingBookingDto;
 import ru.practicum.shareit.booking.dto.OutcomingBookingDto;
-import ru.practicum.shareit.booking.repository.State;
+import ru.practicum.shareit.booking.service.State;
 import ru.practicum.shareit.booking.service.BookingService;
 
 import javax.validation.Valid;
@@ -54,23 +54,25 @@ public class BookingController {
     public Collection<OutcomingBookingDto> getBookingsForUser(@NotNull @RequestHeader("X-Sharer-User-Id") Long userId,
                                                               @RequestParam(defaultValue = "ALL") String state) {
         log.info("Получен запрос GET /bookings?state={} с заголовком X-Sharer-User-Id = {}", state, userId);
+        State stateValue;
         try {
-            State stateValue = State.valueOf(state);
-            return bookingService.getAllByUserId(userId, stateValue);
+            stateValue = State.valueOf(state);
         } catch (IllegalArgumentException e) {
             throw new IllegalStateException("Unknown state: " + state);
         }
+        return bookingService.getAllByUserId(userId, stateValue);
     }
 
     @GetMapping("/owner")
     public Collection<OutcomingBookingDto> getBookingsForItemOwner(@NotNull @RequestHeader("X-Sharer-User-Id") Long itemOwnerId,
                                                                    @RequestParam(defaultValue = "ALL") String state) {
         log.info("Получен запрос GET /bookings/owner?state={} с заголовком X-Sharer-User-Id = {}", state, itemOwnerId);
+        State stateValue;
         try {
-            State stateValue = State.valueOf(state);
-            return bookingService.getAllForItemOwnerId(itemOwnerId, stateValue);
+            stateValue = State.valueOf(state);
         } catch (IllegalArgumentException e) {
             throw new IllegalStateException("Unknown state: " + state);
         }
+        return bookingService.getAllForItemOwnerId(itemOwnerId, stateValue);
     }
 }

@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.model.Booking;
-import ru.practicum.shareit.booking.repository.State;
+import ru.practicum.shareit.booking.service.State;
 import ru.practicum.shareit.booking.service.BookingsGetter;
 import ru.practicum.shareit.item.dto.*;
 import ru.practicum.shareit.item.exception.ItemNotFoundException;
