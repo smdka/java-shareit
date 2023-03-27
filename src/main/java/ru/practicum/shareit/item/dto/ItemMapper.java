@@ -18,7 +18,7 @@ public final class ItemMapper {
         return new ItemDto(item.getId(), item.getName(), item.getDescription(), item.getAvailable(), item.getRequestId());
     }
 
-    public static Collection<ItemDto> toItemDtoAll(Collection<? extends Item> items) {
+    public static List<ItemDto> toItemDtoAll(Collection<? extends Item> items) {
         return items.stream()
                 .map(ItemMapper::toItemDto)
                 .collect(toList());

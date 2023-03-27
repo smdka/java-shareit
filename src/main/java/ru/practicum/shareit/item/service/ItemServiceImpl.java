@@ -7,9 +7,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.model.Booking;
-import ru.practicum.shareit.booking.service.State;
 import ru.practicum.shareit.booking.service.BookingsGetter;
-import ru.practicum.shareit.item.dto.*;
+import ru.practicum.shareit.booking.service.State;
+import ru.practicum.shareit.item.dto.CommentDto;
+import ru.practicum.shareit.item.dto.CommentMapper;
+import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemMapper;
+import ru.practicum.shareit.item.dto.OutcomingItemDto;
 import ru.practicum.shareit.item.exception.ItemNotFoundException;
 import ru.practicum.shareit.item.exception.UserHasNoPermissionException;
 import ru.practicum.shareit.item.model.Item;
@@ -26,7 +30,7 @@ import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import static java.util.Comparator.*;
+import static java.util.Comparator.comparing;
 
 @Slf4j
 @Service
@@ -93,8 +97,8 @@ public class ItemServiceImpl implements ItemService {
     private Booking getLastBooking(long itemId) {
         return bookingsGetter.forItemOwner(List.of(itemId), State.ALL, Pageable.unpaged()).stream()
                 .filter(booking -> (!Booking.Status.REJECTED.equals(booking.getStatus())) &&
-                        booking.getEnd().isBefore(LocalDateTime.now()))
-                .min(comparing(Booking::getStart))
+                        booking.getStart().isBefore(LocalDateTime.now()))
+                .max(comparing(Booking::getEnd))
                 .orElse(null);
     }
 
