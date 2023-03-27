@@ -10,6 +10,7 @@ import ru.practicum.shareit.booking.exception.BookingNotFoundException;
 import ru.practicum.shareit.booking.exception.ItemNotAvailableException;
 import ru.practicum.shareit.item.exception.ItemNotFoundException;
 import ru.practicum.shareit.item.exception.UserHasNoPermissionException;
+import ru.practicum.shareit.request.exception.RequestNotFoundException;
 import ru.practicum.shareit.user.exception.UserEmailAlreadyExist;
 import ru.practicum.shareit.user.exception.UserNotFoundException;
 
@@ -64,6 +65,13 @@ public class ExceptionsHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Map<HttpStatus, String> handleUserNotFound(final UserNotFoundException e) {
+        log.warn(e.getMessage());
+        return Map.of(HttpStatus.NOT_FOUND, e.getMessage());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Map<HttpStatus, String> handleRequestNotFound(final RequestNotFoundException e) {
         log.warn(e.getMessage());
         return Map.of(HttpStatus.NOT_FOUND, e.getMessage());
     }

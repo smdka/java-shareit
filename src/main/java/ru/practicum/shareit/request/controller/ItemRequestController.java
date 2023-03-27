@@ -10,11 +10,12 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import ru.practicum.shareit.request.dto.IncomingRequestDto;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
-import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.request.service.RequestService;
 
-import javax.validation.constraints.NotBlank;
+import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 
@@ -26,9 +27,9 @@ public class ItemRequestController {
     private final RequestService requestService;
     @PostMapping
     public ItemRequestDto post(@NotNull @RequestHeader("X-Sharer-User-Id") Long requesterId,
-                               @NotBlank @RequestBody String description) {
+                               @Valid @RequestBody IncomingRequestDto incomingRequestDto) {
         log.info("Получен запрос POST /requests от пользователя с id = {}", requesterId);
-        return requestService.add(new ItemRequest(description, requesterId));
+        return requestService.add(incomingRequestDto.getDescription(), requesterId);
     }
 
     @GetMapping
@@ -39,8 +40,8 @@ public class ItemRequestController {
 
     @GetMapping("/all")
     public List<ItemRequestDto> getAll(@NotNull @RequestHeader("X-Sharer-User-Id") Long userId,
-                                       @RequestParam Long from,
-                                       @RequestParam Long size) {
+                                       @RequestParam(defaultValue = "0") @Min(0) Integer from,
+                                       @RequestParam(defaultValue = "10") @Min(1) Integer size) {
         log.info("Получен запрос GET /requests/all?from={}&size={} от пользователя с id = {}", from, size, userId);
         return requestService.getByUserId(userId, from, size);
     }

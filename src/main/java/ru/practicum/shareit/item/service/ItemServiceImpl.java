@@ -2,6 +2,8 @@ package ru.practicum.shareit.item.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.model.Booking;
@@ -89,7 +91,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     private Booking getLastBooking(long itemId) {
-        return bookingsGetter.forItemOwner(List.of(itemId), State.ALL).stream()
+        return bookingsGetter.forItemOwner(List.of(itemId), State.ALL, Pageable.unpaged()).stream()
                 .filter(booking -> (!Booking.Status.REJECTED.equals(booking.getStatus())) &&
                         booking.getEnd().isBefore(LocalDateTime.now()))
                 .min(comparing(Booking::getStart))
@@ -97,7 +99,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     private Booking getNextBooking(long itemId) {
-        return bookingsGetter.forItemOwner(List.of(itemId), State.ALL).stream()
+        return bookingsGetter.forItemOwner(List.of(itemId), State.ALL, Pageable.unpaged()).stream()
                 .filter(booking -> (!Booking.Status.REJECTED.equals(booking.getStatus())) &&
                         booking.getStart().isAfter(LocalDateTime.now()))
                 .min(comparing(Booking::getStart))
@@ -106,18 +108,18 @@ public class ItemServiceImpl implements ItemService {
 
 
     @Override
-    public Collection<OutcomingItemDto> getByUserId(long userId) {
-        Collection<Item> items = getIfUserExists(userId, () -> itemRepository.findItemsByOwnerId(userId));
+    public Collection<OutcomingItemDto> getByUserId(long userId, Integer from, Integer size) {
+        Collection<Item> items = getIfUserExists(userId, () -> itemRepository.findByOwnerIdOrderByIdAsc(userId, PageRequest.of(from/size, size)));
         return items.stream()
                 .map(item -> ItemMapper.toOutputItemDto(item, getLastBooking(item.getId()), getNextBooking(item.getId())))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public Collection<ItemDto> searchInNameOrDescription(String text) {
+    public Collection<ItemDto> searchInNameOrDescription(String text, Integer from, Integer size) {
         return text.isBlank() ?
                 Collections.emptyList() :
-                ItemMapper.toItemDtoAll(itemRepository.search(text));
+                ItemMapper.toItemDtoAll(itemRepository.search(text, PageRequest.of(from/size, size)));
     }
 
     @Override
@@ -127,7 +129,7 @@ public class ItemServiceImpl implements ItemService {
                 .orElseThrow(() -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, authorId)));
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new ItemNotFoundException(String.format(ITEM_NOT_FOUND_MSG, itemId)));
-        Collection<Booking> bookings = bookingsGetter.forUser(authorId, State.PAST);
+        Collection<Booking> bookings = bookingsGetter.forUser(authorId, State.PAST, Pageable.unpaged());
 
         ifNotBookingAuthorThrowNoPermissionException(itemId, bookings);
 

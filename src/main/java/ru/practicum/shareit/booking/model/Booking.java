@@ -4,7 +4,17 @@ import lombok.Data;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
 import java.time.LocalDateTime;
 
 @Data
@@ -19,10 +29,10 @@ public class Booking {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "start_date")
+    @Column(name = "start_date", nullable = false)
     private LocalDateTime start;
 
-    @Column(name = "end_date")
+    @Column(name = "end_date", nullable = false)
     private LocalDateTime end;
 
     @OneToOne

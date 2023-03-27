@@ -1,6 +1,6 @@
 package ru.practicum.shareit.booking.repository;
 
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 import ru.practicum.shareit.booking.model.Booking;
@@ -8,26 +8,27 @@ import ru.practicum.shareit.booking.model.Booking;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.List;
 
 @Repository
 public interface BookingRepository extends CrudRepository<Booking, Long>, Serializable {
-    Collection<Booking> findAllByBookerId(Long bookerId, Sort sort);
+    List<Booking> findAllByBookerId(Long bookerId, Pageable pageable);
 
-    Collection<Booking> findAllByBookerIdAndStatus(Long bookerId, Booking.Status status, Sort sort);
+    List<Booking> findAllByBookerIdAndStatus(Long bookerId, Booking.Status status, Pageable pageable);
 
-    Collection<Booking> findAllByBookerIdAndEndBefore(Long bookerId, LocalDateTime ldt, Sort sort);
+    List<Booking> findAllByBookerIdAndEndBefore(Long bookerId, LocalDateTime ldt, Pageable pageable);
 
-    Collection<Booking> findAllByBookerIdAndStartAfter(Long bookerId, LocalDateTime ldt, Sort sort);
+    List<Booking> findAllByBookerIdAndStartAfter(Long bookerId, LocalDateTime ldt, Pageable pageable);
 
-    Collection<Booking> findAllByBookerIdAndStartBeforeAndEndAfter(Long bookerId, LocalDateTime now, LocalDateTime now1, Sort sort);
+    List<Booking> findAllByBookerIdAndStartBeforeAndEndAfter(Long bookerId, LocalDateTime now, LocalDateTime now1, Pageable pageable);
 
-    Collection<Booking> findAllByItemIdIn(Collection<Long> itemIds, Sort sort);
+    List<Booking> findAllByItemIdIn(Collection<Long> itemIds, Pageable pageable);
 
-    Collection<Booking> findAllByItemIdInAndStatus(Collection<Long> ids, Booking.Status status, Sort sort);
+    List<Booking> findAllByItemIdInAndStatus(Collection<Long> ids, Booking.Status status, Pageable pageable);
 
-    Collection<Booking> findAllByItemIdInAndEndBefore(Collection<Long> ids, LocalDateTime now, Sort sort);
+    List<Booking> findAllByItemIdInAndEndBefore(Collection<Long> ids, LocalDateTime now, Pageable pageable);
 
-    Collection<Booking> findAllByItemIdInAndStartAfter(Collection<Long> ids, LocalDateTime now, Sort sort);
+    List<Booking> findAllByItemIdInAndStartAfter(Collection<Long> ids, LocalDateTime now, Pageable pageable);
 
-    Collection<Booking> findAllByItemIdInAndStartBeforeAndEndAfter(Collection<Long> ids, LocalDateTime now, LocalDateTime now1, Sort sort);
+    List<Booking> findAllByItemIdInAndStartBeforeAndEndAfter(Collection<Long> ids, LocalDateTime now, LocalDateTime now1, Pageable pageable);
 }

@@ -17,6 +17,7 @@ import ru.practicum.shareit.booking.service.State;
 import ru.practicum.shareit.booking.service.BookingService;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import java.util.Collection;
 
@@ -52,7 +53,9 @@ public class BookingController {
 
     @GetMapping
     public Collection<OutcomingBookingDto> getBookingsForUser(@NotNull @RequestHeader("X-Sharer-User-Id") Long userId,
-                                                              @RequestParam(defaultValue = "ALL") String state) {
+                                                              @RequestParam(defaultValue = "ALL") String state,
+                                                              @RequestParam(defaultValue = "0") @Min(0) Integer from,
+                                                              @RequestParam(defaultValue = "10") @Min(1) Integer size) {
         log.info("Получен запрос GET /bookings?state={} с заголовком X-Sharer-User-Id = {}", state, userId);
         State stateValue;
         try {
@@ -60,12 +63,14 @@ public class BookingController {
         } catch (IllegalArgumentException e) {
             throw new IllegalStateException("Unknown state: " + state);
         }
-        return bookingService.getAllByUserId(userId, stateValue);
+        return bookingService.getAllByUserId(userId, stateValue, from, size);
     }
 
     @GetMapping("/owner")
     public Collection<OutcomingBookingDto> getBookingsForItemOwner(@NotNull @RequestHeader("X-Sharer-User-Id") Long itemOwnerId,
-                                                                   @RequestParam(defaultValue = "ALL") String state) {
+                                                                   @RequestParam(defaultValue = "ALL") String state,
+                                                                   @RequestParam(defaultValue = "0") @Min(0) Integer from,
+                                                                   @RequestParam(defaultValue = "10") @Min(1) Integer size) {
         log.info("Получен запрос GET /bookings/owner?state={} с заголовком X-Sharer-User-Id = {}", state, itemOwnerId);
         State stateValue;
         try {
@@ -73,6 +78,6 @@ public class BookingController {
         } catch (IllegalArgumentException e) {
             throw new IllegalStateException("Unknown state: " + state);
         }
-        return bookingService.getAllForItemOwnerId(itemOwnerId, stateValue);
+        return bookingService.getAllForItemOwnerId(itemOwnerId, stateValue, from, size);
     }
 }

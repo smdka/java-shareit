@@ -13,9 +13,9 @@ public interface ItemService {
 
     OutcomingItemDto getByItemId(long itemId, long userId);
 
-    Collection<OutcomingItemDto> getByUserId(long userId);
+    Collection<OutcomingItemDto> getByUserId(long userId, Integer from, Integer size);
 
-    Collection<ItemDto> searchInNameOrDescription(String text);
+    Collection<ItemDto> searchInNameOrDescription(String text, Integer from, Integer size);
 
     CommentDto addComment(String text, Long authorId, Long itemId);
 }

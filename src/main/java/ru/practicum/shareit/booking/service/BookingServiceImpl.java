@@ -2,13 +2,15 @@ package ru.practicum.shareit.booking.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dto.BookingMapper;
 import ru.practicum.shareit.booking.dto.IncomingBookingDto;
 import ru.practicum.shareit.booking.dto.OutcomingBookingDto;
-import ru.practicum.shareit.booking.exception.ItemNotAvailableException;
 import ru.practicum.shareit.booking.exception.BookingNotFoundException;
+import ru.practicum.shareit.booking.exception.ItemNotAvailableException;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.item.exception.ItemNotFoundException;
@@ -26,6 +28,7 @@ import java.util.Collection;
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class BookingServiceImpl implements BookingService {
+    private static final Sort SORT_BY_START = Sort.by(Sort.Direction.DESC, "start");
     private static final String USER_NOT_FOUND_MSG = "Пользователь с id = %d не найден";
     private static final String ITEM_NOT_AVAILABLE_MSG = "Предмет с id = %d не доступен";
     private static final String BOOKING_NOT_FOUND_MSG = "Бронирование с id = %d не найдено";
@@ -33,7 +36,7 @@ public class BookingServiceImpl implements BookingService {
     private static final String NO_PERMISSION_MSG =
             "У пользователя с id = %d нет прав на изменение/получение бронирования с id = %d";
     private static final String BOOKING_DATETIME_ERROR_MSG =
-            "Время окончания бронирования не может быть раньше начала бронирования";
+            "Время окончания бронирования не может быть раньше или равно началу бронирования";
     private static final String CANT_CHANGE_STATUS_MSG = "Нельзя изменить статус с APPROVED";
     private static final String CANT_BOOK_BY_ITEM_OWNER_MSG = "Хозяин вещи не может создать бронь своей вещи";
     private final ItemRepository itemRepository;
@@ -77,7 +80,8 @@ public class BookingServiceImpl implements BookingService {
     }
 
     private void validateBookingDatesOrThrow(Booking booking) {
-        if (booking.getEnd().isBefore(booking.getStart())) {
+        if (booking.getEnd().isBefore(booking.getStart()) ||
+                booking.getEnd().isEqual(booking.getStart())) {
             throw new ValidationException(BOOKING_DATETIME_ERROR_MSG);
         }
     }
@@ -135,15 +139,15 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public Collection<OutcomingBookingDto> getAllByUserId(Long userId, State state) {
+    public Collection<OutcomingBookingDto> getAllByUserId(Long userId, State state, Integer from, Integer size) {
         ifUserDoesntExistThrow(userId);
-        return BookingMapper.toOutcomingDtoAll(bookingsGetter.forUser(userId, state));
+        return BookingMapper.toOutcomingDtoAll(bookingsGetter.forUser(userId, state, PageRequest.of(from/size, size, SORT_BY_START)));
     }
 
     @Override
-    public Collection<OutcomingBookingDto> getAllForItemOwnerId(Long itemOwnerId, State state) {
+    public Collection<OutcomingBookingDto> getAllForItemOwnerId(Long itemOwnerId, State state, Integer from, Integer size) {
         ifUserDoesntExistThrow(itemOwnerId);
         Collection<Long> itemIds = itemRepository.findIdsByOwnerId(itemOwnerId);
-        return BookingMapper.toOutcomingDtoAll(bookingsGetter.forItemOwner(itemIds, state));
+        return BookingMapper.toOutcomingDtoAll(bookingsGetter.forItemOwner(itemIds, state, PageRequest.of(from, size, SORT_BY_START)));
     }
 }
