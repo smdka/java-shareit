@@ -19,29 +19,32 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RequestServiceImpl implements RequestService {
     private static final String REQUEST_NOT_FOUND_MSG = "Запрос с id = %d не найден";
-
     private final RequestRepository requestRepository;
     private final UserChecker userChecker;
 
     @Override
     @Transactional
     public ItemRequestDto add(String description, Long requesterId) {
-        return userChecker.getIfExists(requesterId, () -> RequestMapper.toDto(requestRepository.save(RequestMapper.toRequest(description, requesterId))));
+        return userChecker.getIfExists(requesterId,
+                () -> RequestMapper.toDto(requestRepository.save(RequestMapper.toRequest(description, requesterId))));
     }
 
     @Override
     public List<ItemRequestDto> getByRequesterId(Long requesterId) {
-        return userChecker.getIfExists(requesterId, () -> RequestMapper.toDtoAll(requestRepository.findByRequesterIdOrderByCreatedAsc(requesterId)));
+        return userChecker.getIfExists(requesterId,
+                () -> RequestMapper.toDtoAll(requestRepository.findByRequesterIdOrderByCreatedAsc(requesterId)));
     }
 
     @Override
     public List<ItemRequestDto> getByUserId(Long userId, Integer from, Integer size) {
-        return userChecker.getIfExists(userId, () -> RequestMapper.toDtoAll(requestRepository.findByRequesterIdNotOrderByCreatedAsc(userId, PageRequest.of(from, size))));
+        return userChecker.getIfExists(userId,
+                () -> RequestMapper.toDtoAll(requestRepository.findByRequesterIdNotOrderByCreatedAsc(userId, PageRequest.of(from, size))));
     }
 
     @Override
     public ItemRequestDto getById(Long userId, Long requestId) {
-        return userChecker.getIfExists(userId, () -> RequestMapper.toDto(requestRepository.findById(requestId)
+        return userChecker.getIfExists(userId,
+                () -> RequestMapper.toDto(requestRepository.findById(requestId)
                 .orElseThrow(() -> new RequestNotFoundException(String.format(REQUEST_NOT_FOUND_MSG, requestId)))));
     }
 }

@@ -107,7 +107,8 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public Collection<OutcomingItemDto> getByUserId(long userId, Integer from, Integer size) {
-        Collection<Item> items = userChecker.getIfExists(userId, () -> itemRepository.findByOwnerIdOrderByIdAsc(userId, PageRequest.of(from/size, size)));
+        Collection<Item> items = userChecker.getIfExists(userId,
+                () -> itemRepository.findByOwnerIdOrderByIdAsc(userId, PageRequest.of(from/size, size)));
         return items.stream()
                 .map(item -> ItemMapper.toOutputItemDto(item, getLastBooking(item.getId()), getNextBooking(item.getId())))
                 .collect(Collectors.toList());
