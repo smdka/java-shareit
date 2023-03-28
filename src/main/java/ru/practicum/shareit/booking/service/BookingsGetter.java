@@ -1,6 +1,6 @@
 package ru.practicum.shareit.booking.service;
 
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import ru.practicum.shareit.booking.model.Booking;
@@ -12,9 +12,9 @@ import java.util.Map;
 import java.util.function.BiFunction;
 
 @Component
-@RequiredArgsConstructor
+@AllArgsConstructor
 public class BookingsGetter {
-    private final BookingRepository bookingRepository;
+    private BookingRepository bookingRepository;
 
     private final Map<State, BiFunction<Long, Pageable, Collection<Booking>>> forUser =
             Map.of(
