@@ -19,6 +19,7 @@ import ru.practicum.shareit.item.exception.UserHasNoPermissionException;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.user.UserChecker;
 import ru.practicum.shareit.user.exception.UserNotFoundException;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
@@ -27,7 +28,6 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static java.util.Comparator.comparing;
@@ -44,6 +44,7 @@ public class ItemServiceImpl implements ItemService {
     private final UserRepository userRepository;
     private final BookingsGetter bookingsGetter;
     private final CommentRepository commentRepository;
+    private final UserChecker userChecker;
 
     @Override
     @Transactional
@@ -51,19 +52,12 @@ public class ItemServiceImpl implements ItemService {
         User user = userRepository.findById(ownerId)
                 .orElseThrow(() -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, ownerId)));
         Item item = ItemMapper.toItem(itemDto, user);
-        return ItemMapper.toItemDto(getIfUserExists(ownerId, () -> itemRepository.save(item)));
-    }
-
-    private <T> T getIfUserExists(long userId, Supplier<T> s) {
-        if (userRepository.existsById(userId)) {
-            return s.get();
-        }
-        throw new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId));
+        return ItemMapper.toItemDto(userChecker.getIfExists(ownerId, () -> itemRepository.save(item)));
     }
 
     @Transactional
     public ItemDto updateById(Long itemId, ItemDto itemWithUpdates, Long ownerId) {
-        Item currItem = getIfUserExists(ownerId, () -> itemRepository.findById(itemId)
+        Item currItem = userChecker.getIfExists(ownerId, () -> itemRepository.findById(itemId)
                 .orElseThrow(() -> new ItemNotFoundException(String.format(ITEM_NOT_FOUND_MSG, itemId))));
 
         checkForUserPermissionOrThrowException(ownerId, currItem);
@@ -113,7 +107,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public Collection<OutcomingItemDto> getByUserId(long userId, Integer from, Integer size) {
-        Collection<Item> items = getIfUserExists(userId, () -> itemRepository.findByOwnerIdOrderByIdAsc(userId, PageRequest.of(from/size, size)));
+        Collection<Item> items = userChecker.getIfExists(userId, () -> itemRepository.findByOwnerIdOrderByIdAsc(userId, PageRequest.of(from/size, size)));
         return items.stream()
                 .map(item -> ItemMapper.toOutputItemDto(item, getLastBooking(item.getId()), getNextBooking(item.getId())))
                 .collect(Collectors.toList());

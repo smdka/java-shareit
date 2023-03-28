@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
+//TODO переделать на SQL запросы
 @Repository
 public interface BookingRepository extends CrudRepository<Booking, Long>, Serializable {
     List<Booking> findAllByBookerId(Long bookerId, Pageable pageable);

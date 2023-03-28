@@ -1,6 +1,6 @@
 package ru.practicum.shareit.booking.service;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 import ru.practicum.shareit.booking.model.Booking;
@@ -12,9 +12,9 @@ import java.util.Map;
 import java.util.function.BiFunction;
 
 @Component
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class BookingsGetter {
-    private BookingRepository bookingRepository;
+    private final BookingRepository bookingRepository;
 
     private final Map<State, BiFunction<Long, Pageable, Collection<Booking>>> forUser =
             Map.of(
@@ -28,7 +28,7 @@ public class BookingsGetter {
 
     private final Map<State, BiFunction<Collection<Long>, Pageable,Collection<Booking>>> forItemOwner =
             Map.of(
-                    State.ALL, (ids, pageable) -> bookingRepository.findAllByItemIdIn(ids, pageable),
+                    State.ALL, (itemIds, pageable) -> bookingRepository.findAllByItemIdIn(itemIds, pageable),
                     State.WAITING, (ids, pageable) -> bookingRepository.findAllByItemIdInAndStatus(ids, Booking.Status.WAITING, pageable),
                     State.REJECTED, (ids, pageable) -> bookingRepository.findAllByItemIdInAndStatus(ids, Booking.Status.REJECTED, pageable),
                     State.PAST, (ids, pageable) -> bookingRepository.findAllByItemIdInAndEndBefore(ids, LocalDateTime.now(), pageable),
