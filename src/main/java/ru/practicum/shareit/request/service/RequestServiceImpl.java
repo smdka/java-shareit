@@ -8,12 +8,12 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
 import ru.practicum.shareit.request.dto.RequestMapper;
 import ru.practicum.shareit.request.exception.RequestNotFoundException;
-import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.request.repository.RequestRepository;
 import ru.practicum.shareit.user.exception.UserNotFoundException;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 @Slf4j
 @Service
@@ -25,38 +25,33 @@ public class RequestServiceImpl implements RequestService {
 
     private final RequestRepository requestRepository;
     private final UserRepository userRepository;
+
     @Override
     @Transactional
     public ItemRequestDto add(String description, Long requesterId) {
-        if (userRepository.existsById(requesterId)) {
-            return RequestMapper.toDto(requestRepository.save(RequestMapper.toRequest(description, requesterId)));
+        return getIfUserExists(requesterId, () -> RequestMapper.toDto(requestRepository.save(RequestMapper.toRequest(description, requesterId))));
+    }
+
+    private <T> T getIfUserExists(Long userId, Supplier<T> supplier) {
+        if (userRepository.existsById(userId)) {
+            return supplier.get();
         }
-        throw new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, requesterId));
+        throw new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId));
     }
 
     @Override
     public List<ItemRequestDto> getByRequesterId(Long requesterId) {
-        if (userRepository.existsById(requesterId)) {
-            return RequestMapper.toDtoAll(requestRepository.findByRequesterIdOrderByCreatedAsc(requesterId));
-        }
-        throw new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, requesterId));
+        return getIfUserExists(requesterId, () -> RequestMapper.toDtoAll(requestRepository.findByRequesterIdOrderByCreatedAsc(requesterId)));
     }
 
     @Override
     public List<ItemRequestDto> getByUserId(Long userId, Integer from, Integer size) {
-        if (userRepository.existsById(userId)) {
-            List<ItemRequest> requests = requestRepository.findByRequesterIdNotOrderByCreatedAsc(userId, PageRequest.of(from, size));
-            return RequestMapper.toDtoAll(requests);
-        }
-        throw new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId));
+        return getIfUserExists(userId, () -> RequestMapper.toDtoAll(requestRepository.findByRequesterIdNotOrderByCreatedAsc(userId, PageRequest.of(from, size))));
     }
 
     @Override
     public ItemRequestDto getById(Long userId, Long requestId) {
-        if (userRepository.existsById(userId)) {
-            return RequestMapper.toDto(requestRepository.findById(requestId)
-                    .orElseThrow(() -> new RequestNotFoundException(String.format(REQUEST_NOT_FOUND_MSG, requestId))));
-        }
-        throw new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId));
+        return getIfUserExists(userId, () -> RequestMapper.toDto(requestRepository.findById(requestId)
+                .orElseThrow(() -> new RequestNotFoundException(String.format(REQUEST_NOT_FOUND_MSG, requestId)))));
     }
 }
