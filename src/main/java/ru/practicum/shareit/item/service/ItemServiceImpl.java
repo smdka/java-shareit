@@ -108,7 +108,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public Collection<OutcomingItemDto> getByUserId(long userId, Integer from, Integer size) {
         Collection<Item> items = userChecker.getIfExists(userId,
-                () -> itemRepository.findByOwnerIdOrderByIdAsc(userId, PageRequest.of(from/size, size)));
+                () -> itemRepository.findByOwnerIdOrderByIdAsc(userId, PageRequest.of(from / size, size)));
         return items.stream()
                 .map(item -> ItemMapper.toOutputItemDto(item, getLastBooking(item.getId()), getNextBooking(item.getId())))
                 .collect(Collectors.toList());
@@ -118,7 +118,7 @@ public class ItemServiceImpl implements ItemService {
     public Collection<ItemDto> searchInNameOrDescription(String text, Integer from, Integer size) {
         return text.isBlank() ?
                 Collections.emptyList() :
-                ItemMapper.toItemDtoAll(itemRepository.search(text, PageRequest.of(from/size, size)));
+                ItemMapper.toItemDtoAll(itemRepository.search(text, PageRequest.of(from / size, size)));
     }
 
     @Override

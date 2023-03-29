@@ -12,6 +12,7 @@ import java.util.function.Supplier;
 @RequiredArgsConstructor
 public class UserChecker {
     private final UserRepository userRepository;
+
     public <T> T getIfExists(Long userId, Supplier<T> s) {
         if (userRepository.existsById(userId)) {
             return s.get();

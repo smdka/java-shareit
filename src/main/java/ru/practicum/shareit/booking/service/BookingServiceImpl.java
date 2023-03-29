@@ -141,7 +141,7 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public Collection<OutcomingBookingDto> getAllByUserId(Long userId, State state, Integer from, Integer size) {
         ifUserDoesntExistThrow(userId);
-        return BookingMapper.toOutcomingDtoAll(bookingsGetter.forUser(userId, state, PageRequest.of(from/size, size, SORT_BY_START)));
+        return BookingMapper.toOutcomingDtoAll(bookingsGetter.forUser(userId, state, PageRequest.of(from / size, size, SORT_BY_START)));
     }
 
     @Override

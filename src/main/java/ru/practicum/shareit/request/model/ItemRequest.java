@@ -1,6 +1,8 @@
 package ru.practicum.shareit.request.model;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import ru.practicum.shareit.item.model.Item;
 
 import javax.persistence.Column;
@@ -17,6 +19,8 @@ import java.util.List;
 @Data
 @Entity
 @Table(name = "requests")
+@NoArgsConstructor
+@AllArgsConstructor
 public class ItemRequest {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,7 +30,7 @@ public class ItemRequest {
     @Column(name = "requester_id")
     private Long requesterId;
 
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "created_at")
     private final LocalDateTime created = LocalDateTime.now();
 
     @OneToMany

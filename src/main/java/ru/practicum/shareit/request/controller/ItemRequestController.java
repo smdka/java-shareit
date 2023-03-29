@@ -27,6 +27,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ItemRequestController {
     private final RequestService requestService;
+
     @PostMapping
     public ItemRequestDto post(@NotNull @RequestHeader("X-Sharer-User-Id") Long requesterId,
                                @Valid @RequestBody IncomingRequestDto incomingRequestDto) {
