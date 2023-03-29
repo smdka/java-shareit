@@ -93,7 +93,7 @@ class UserServiceTest {
         when(userRepository.save(any(User.class))).thenReturn(newUpdatedUser);
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
 
-        UserDto updatedUser = userService.updateById( 1L, newUpdatedUserDto);
+        UserDto updatedUser = userService.updateById(1L, newUpdatedUserDto);
 
         assertNotNull(updatedUser);
         assertEquals(1, updatedUser.getId());
