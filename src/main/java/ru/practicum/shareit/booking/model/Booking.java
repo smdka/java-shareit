@@ -40,11 +40,11 @@ public class Booking {
     private LocalDateTime end;
 
     @OneToOne
-    @JoinColumn(name = "item_id")
+    @JoinColumn(name = "item_id", updatable = false)
     private Item item;
 
     @ManyToOne
-    @JoinColumn(name = "booker_id")
+    @JoinColumn(name = "booker_id", updatable = false)
     private User booker;
 
     @Enumerated(EnumType.STRING)

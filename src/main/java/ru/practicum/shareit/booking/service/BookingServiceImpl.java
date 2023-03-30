@@ -88,8 +88,8 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     @Transactional
-    public OutcomingBookingDto changeStatus(Long bookingId, Boolean approved, Long userId) {
-        ifUserDoesntExistThrow(userId);
+    public OutcomingBookingDto changeStatus(Long bookingId, Boolean approved, Long itemOwnerId) {
+        ifUserDoesntExistThrow(itemOwnerId);
 
         Booking booking = bookingRepository.findById(bookingId).orElseThrow(
                 () -> new BookingNotFoundException(String.format(BOOKING_NOT_FOUND_MSG, bookingId)));
@@ -99,7 +99,7 @@ public class BookingServiceImpl implements BookingService {
         Item item = booking.getItem();
         Long ownerId = item.getOwner().getId();
 
-        ifUserNotEqualsOwnerThrow(userId, item, ownerId);
+        ifUserNotEqualsOwnerThrow(itemOwnerId, item, ownerId);
 
         booking.setStatus(Boolean.TRUE.equals(approved) ? Booking.Status.APPROVED : Booking.Status.REJECTED);
         return BookingMapper.toOutcomingDto(bookingRepository.save(booking));

@@ -1,6 +1,5 @@
 package ru.practicum.shareit.booking;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @Transactional
@@ -85,43 +85,43 @@ class BookingServiceIntegrationTest {
         OutcomingBookingDto bookingOutputDto1 = bookingService.add(createdUser2.getId(), bookingInputDto1);
         OutcomingBookingDto bookingOutputDto2 = bookingService.add(createdUser1.getId(), bookingInputDto2);
 
-        Assertions.assertEquals(1L, createdItem1.getId());
-        Assertions.assertEquals(2L, createdItem2.getId());
-        Assertions.assertEquals(1L, bookingOutputDto1.getId());
-        Assertions.assertEquals(createdUser2.getId(), bookingOutputDto1.getBooker().getId());
-        Assertions.assertEquals(1L, bookingOutputDto1.getItem().getId());
-        Assertions.assertEquals(Booking.Status.WAITING, bookingOutputDto1.getStatus());
+        assertEquals(1L, createdItem1.getId());
+        assertEquals(2L, createdItem2.getId());
+        assertEquals(1L, bookingOutputDto1.getId());
+        assertEquals(createdUser2.getId(), bookingOutputDto1.getBooker().getId());
+        assertEquals(1L, bookingOutputDto1.getItem().getId());
+        assertEquals(Booking.Status.WAITING, bookingOutputDto1.getStatus());
 
-        Assertions.assertEquals(1L, createdItem1.getId());
-        Assertions.assertEquals(2L, createdItem2.getId());
-        Assertions.assertEquals(2L, bookingOutputDto2.getId());
-        Assertions.assertEquals(createdUser1.getId(), bookingOutputDto2.getBooker().getId());
-        Assertions.assertEquals(2L, bookingOutputDto2.getItem().getId());
-        Assertions.assertEquals(Booking.Status.WAITING, bookingOutputDto2.getStatus());
+        assertEquals(1L, createdItem1.getId());
+        assertEquals(2L, createdItem2.getId());
+        assertEquals(2L, bookingOutputDto2.getId());
+        assertEquals(createdUser1.getId(), bookingOutputDto2.getBooker().getId());
+        assertEquals(2L, bookingOutputDto2.getItem().getId());
+        assertEquals(Booking.Status.WAITING, bookingOutputDto2.getStatus());
 
         OutcomingBookingDto approveOutputDto1 = bookingService
                 .changeStatus(createdUser1.getId(), true, bookingOutputDto1.getId());
         OutcomingBookingDto approveOutputDto2 = bookingService
                 .changeStatus(createdUser2.getId(), true, bookingOutputDto2.getId());
 
-        Assertions.assertEquals(1L, approveOutputDto1.getId());
-        Assertions.assertEquals(2L, approveOutputDto1.getBooker().getId());
-        Assertions.assertEquals(1L, approveOutputDto1.getItem().getId());
-        Assertions.assertEquals(Booking.Status.APPROVED, approveOutputDto1.getStatus());
+        assertEquals(1L, approveOutputDto1.getId());
+        assertEquals(2L, approveOutputDto1.getBooker().getId());
+        assertEquals(1L, approveOutputDto1.getItem().getId());
+        assertEquals(Booking.Status.APPROVED, approveOutputDto1.getStatus());
 
-        Assertions.assertEquals(2L, approveOutputDto2.getId());
-        Assertions.assertEquals(1L, approveOutputDto2.getBooker().getId());
-        Assertions.assertEquals(2L, approveOutputDto2.getItem().getId());
-        Assertions.assertEquals(Booking.Status.APPROVED, approveOutputDto2.getStatus());
+        assertEquals(2L, approveOutputDto2.getId());
+        assertEquals(1L, approveOutputDto2.getBooker().getId());
+        assertEquals(2L, approveOutputDto2.getItem().getId());
+        assertEquals(Booking.Status.APPROVED, approveOutputDto2.getStatus());
 
         List<OutcomingBookingDto> bookingOutputDtos = new ArrayList<>(bookingService
                 .getAllForItemOwnerId(createdUser2.getId(), State.ALL, 0, 2));
 
-        Assertions.assertEquals(1, bookingOutputDtos.size());
-        Assertions.assertEquals(2L, bookingOutputDtos.get(0).getId());
-        Assertions.assertEquals(1L, bookingOutputDtos.get(0).getBooker().getId());
-        Assertions.assertEquals(2L, bookingOutputDtos.get(0).getItem().getId());
-        Assertions.assertEquals(Booking.Status.APPROVED, bookingOutputDtos.get(0).getStatus());
+        assertEquals(1, bookingOutputDtos.size());
+        assertEquals(2L, bookingOutputDtos.get(0).getId());
+        assertEquals(1L, bookingOutputDtos.get(0).getBooker().getId());
+        assertEquals(2L, bookingOutputDtos.get(0).getItem().getId());
+        assertEquals(Booking.Status.APPROVED, bookingOutputDtos.get(0).getStatus());
     }
 
     @Test
@@ -133,36 +133,36 @@ class BookingServiceIntegrationTest {
         OutcomingBookingDto bookingOutputDto1 = bookingService.add(createdUser2.getId(), bookingInputDto1);
         OutcomingBookingDto bookingOutputDto2 = bookingService.add(createdUser1.getId(), bookingInputDto2);
 
-        Assertions.assertEquals(1L, createdItem1.getId());
-        Assertions.assertEquals(2L, createdItem2.getId());
-        Assertions.assertEquals(1L, bookingOutputDto1.getId());
-        Assertions.assertEquals(2L, bookingOutputDto1.getBooker().getId());
-        Assertions.assertEquals(1L, bookingOutputDto1.getItem().getId());
-        Assertions.assertEquals(Booking.Status.WAITING, bookingOutputDto1.getStatus());
+        assertEquals(1L, createdItem1.getId());
+        assertEquals(2L, createdItem2.getId());
+        assertEquals(1L, bookingOutputDto1.getId());
+        assertEquals(2L, bookingOutputDto1.getBooker().getId());
+        assertEquals(1L, bookingOutputDto1.getItem().getId());
+        assertEquals(Booking.Status.WAITING, bookingOutputDto1.getStatus());
 
-        Assertions.assertEquals(1L, createdItem1.getId());
-        Assertions.assertEquals(2L, createdItem2.getId());
-        Assertions.assertEquals(2L, bookingOutputDto2.getId());
-        Assertions.assertEquals(1L, bookingOutputDto2.getBooker().getId());
-        Assertions.assertEquals(2L, bookingOutputDto2.getItem().getId());
-        Assertions.assertEquals(Booking.Status.WAITING, bookingOutputDto2.getStatus());
+        assertEquals(1L, createdItem1.getId());
+        assertEquals(2L, createdItem2.getId());
+        assertEquals(2L, bookingOutputDto2.getId());
+        assertEquals(1L, bookingOutputDto2.getBooker().getId());
+        assertEquals(2L, bookingOutputDto2.getItem().getId());
+        assertEquals(Booking.Status.WAITING, bookingOutputDto2.getStatus());
 
         OutcomingBookingDto approveOutputDto2 = bookingService
                 .changeStatus(createdUser2.getId(), true, bookingOutputDto2.getId());
 
-        Assertions.assertEquals(2L, approveOutputDto2.getId());
-        Assertions.assertEquals(1L, approveOutputDto2.getBooker().getId());
-        Assertions.assertEquals(2L, approveOutputDto2.getItem().getId());
-        Assertions.assertEquals(Booking.Status.APPROVED, approveOutputDto2.getStatus());
+        assertEquals(2L, approveOutputDto2.getId());
+        assertEquals(1L, approveOutputDto2.getBooker().getId());
+        assertEquals(2L, approveOutputDto2.getItem().getId());
+        assertEquals(Booking.Status.APPROVED, approveOutputDto2.getStatus());
 
         List<OutcomingBookingDto> bookingOutputDtos = new ArrayList<>(bookingService
                 .getAllForItemOwnerId(createdUser2.getId(), State.FUTURE, 0, 1));
 
-        Assertions.assertEquals(1, bookingOutputDtos.size());
-        Assertions.assertEquals(2L, bookingOutputDtos.get(0).getId());
-        Assertions.assertEquals(1L, bookingOutputDtos.get(0).getBooker().getId());
-        Assertions.assertEquals(2L, bookingOutputDtos.get(0).getItem().getId());
-        Assertions.assertEquals(Booking.Status.APPROVED, bookingOutputDtos.get(0).getStatus());
+        assertEquals(1, bookingOutputDtos.size());
+        assertEquals(2L, bookingOutputDtos.get(0).getId());
+        assertEquals(1L, bookingOutputDtos.get(0).getBooker().getId());
+        assertEquals(2L, bookingOutputDtos.get(0).getItem().getId());
+        assertEquals(Booking.Status.APPROVED, bookingOutputDtos.get(0).getStatus());
     }
 
     @Test

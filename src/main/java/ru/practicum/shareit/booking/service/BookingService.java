@@ -8,7 +8,7 @@ import java.util.Collection;
 public interface BookingService {
     OutcomingBookingDto add(Long userId, IncomingBookingDto incomingBookingDto);
 
-    OutcomingBookingDto changeStatus(Long bookingId, Boolean approved, Long userId);
+    OutcomingBookingDto changeStatus(Long bookingId, Boolean approved, Long itemOwnerId);
 
     OutcomingBookingDto getById(Long bookingId, Long userId);
 

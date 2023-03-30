@@ -16,8 +16,8 @@ import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.booking.service.BookingServiceImpl;
 import ru.practicum.shareit.booking.service.BookingsGetter;
 import ru.practicum.shareit.booking.service.State;
-import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemDtoForBooking;
+import ru.practicum.shareit.item.exception.ItemNotFoundException;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.dto.UserDto;
@@ -34,6 +34,8 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.AdditionalMatchers.not;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
@@ -65,13 +67,6 @@ class BookingServiceTest {
     private final UserDtoForBooking userDtoForBooking = new UserDtoForBooking(
             2L);
 
-    private final ItemDto itemDto = new ItemDto(
-            1L,
-            "Item",
-            "Description",
-            true,
-            2L);
-
     private final ItemDtoForBooking itemDtoForBooking = new ItemDtoForBooking(
             1L,
             "Item");
@@ -91,6 +86,14 @@ class BookingServiceTest {
             Booking.Status.WAITING,
             2L,
             1L);
+
+    private final IncomingBookingDto incomingBookingDtoWithWrongItem = new IncomingBookingDto(
+            1L,
+            start,
+            end,
+            Booking.Status.WAITING,
+            2L,
+            999L);
 
     private final IncomingBookingDto incomingBookingDtoWithWrongEnd = new IncomingBookingDto(
             1L,
@@ -165,24 +168,46 @@ class BookingServiceTest {
     }
 
     @Test
+    void addBookingNotExistingUser() {
+        when(bookingRepository.save(any(Booking.class))).thenReturn(booking);
+        when(userRepository.findById(secondUser.getId())).thenReturn(Optional.of(secondUser));
+        when(userRepository.findById(not(eq(secondUser.getId())))).thenThrow(UserNotFoundException.class);
+        when(itemRepository.findById(anyLong())).thenReturn(Optional.of(item));
+
+        bookingService.add(secondUser.getId(), incomingBookingDto);
+
+        assertThrows(UserNotFoundException.class,
+                () -> bookingService.add(userDto.getId(), incomingBookingDto));
+    }
+
+    @Test
+    void addBookingNotExistingItem() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(secondUser));
+        when(itemRepository.findById(not(eq(item.getId())))).thenThrow(ItemNotFoundException.class);
+
+        assertThrows(ItemNotFoundException.class,
+                () -> bookingService.add(userDto.getId(), incomingBookingDtoWithWrongItem));
+    }
+
+    @Test
     void addBookingForUnavailableItem() {
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
         when(itemRepository.findById(anyLong())).thenReturn(Optional.of(notAvailableItem));
 
-        Assertions.assertThrows(ItemNotAvailableException.class,
+        assertThrows(ItemNotAvailableException.class,
                 () -> bookingService.add(userDto.getId(), incomingBookingDto));
     }
 
     @Test
     void addBookingWithWrongEndDate() {
-        Assertions.assertThrows(ValidationException.class,
+        assertThrows(ValidationException.class,
                 () -> bookingService.add(userDto.getId(), incomingBookingDtoWithWrongEnd));
     }
 
 
     @Test
     void addBookingWithEqualEndAndStart() {
-        Assertions.assertThrows(ValidationException.class,
+        assertThrows(ValidationException.class,
                 () -> bookingService.add(userDto.getId(), incomingBookingDtoWithEqualStartAndEnd));
     }
 
@@ -191,7 +216,7 @@ class BookingServiceTest {
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
         when(itemRepository.findById(anyLong())).thenReturn(Optional.of(item));
 
-        Assertions.assertThrows(BookingNotFoundException.class,
+        assertThrows(BookingNotFoundException.class,
                 () -> bookingService.add(userDto.getId(), incomingBookingDto));
     }
 
@@ -211,7 +236,7 @@ class BookingServiceTest {
         when(userRepository.existsById(anyLong())).thenReturn(true);
         when(bookingRepository.findById(anyLong())).thenReturn(Optional.of(booking));
 
-        Assertions.assertThrows(IllegalArgumentException.class,
+        assertThrows(IllegalArgumentException.class,
                 () -> bookingService.changeStatus(1L, true, 1L));
     }
 
@@ -219,7 +244,7 @@ class BookingServiceTest {
     void approvingBookingWithWrongId() {
         when(userRepository.existsById(anyLong())).thenReturn(true);
 
-        Assertions.assertThrows(BookingNotFoundException.class,
+        assertThrows(BookingNotFoundException.class,
                 () -> bookingService.changeStatus(2L, true, 1L));
     }
 
@@ -235,7 +260,7 @@ class BookingServiceTest {
 
     @Test
     void getBookingWithWrongUserId() {
-        Assertions.assertThrows(UserNotFoundException.class,
+        assertThrows(UserNotFoundException.class,
                 () -> bookingService.getById(1L, 3L));
     }
 

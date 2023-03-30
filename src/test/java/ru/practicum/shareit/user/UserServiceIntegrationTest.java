@@ -1,12 +1,14 @@
 package ru.practicum.shareit.user;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.exception.UserNotFoundException;
+import ru.practicum.shareit.user.repository.UserRepository;
 import ru.practicum.shareit.user.service.UserService;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -18,6 +20,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class UserServiceIntegrationTest {
     @Autowired
     private UserService userService;
+
+    @Mock
+    private UserRepository userRepository;
 
     private final UserDto userDto = new UserDto(
             null,
