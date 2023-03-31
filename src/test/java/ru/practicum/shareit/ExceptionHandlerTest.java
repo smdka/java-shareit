@@ -17,8 +17,7 @@ import ru.practicum.shareit.user.dto.UserDto;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Transactional
@@ -69,6 +68,24 @@ class ExceptionHandlerTest {
     @Test
     void notFound() throws Exception {
         mvc.perform(get("/requests/99")
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("X-Sharer-User-Id", "1"))
+                .andExpect(status().isNotFound());
+
+        mvc.perform(get("/bookings/99")
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("X-Sharer-User-Id", "1"))
+                .andExpect(status().isNotFound());
+
+        mvc.perform(get("/users/99")
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("X-Sharer-User-Id", "1"))
+                .andExpect(status().isNotFound());
+
+        mvc.perform(get("/items/99")
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("X-Sharer-User-Id", "1"))
