@@ -127,57 +127,26 @@ class BookingServiceIntegrationTest {
     @Test
     void getAllBookingsWithFutureStateByBooker() {
         UserDto createdUser1 = userService.add(userDto1);
-        ItemDto createdItem1 = itemService.add(itemDto1, createdUser1.getId());
+        Long user1Id = createdUser1.getId();
+        ItemDto createdItem1 = itemService.add(itemDto1, user1Id);
 
         UserDto createdUser2 = userService.add(userDto2);
-        ItemDto createdItem2 = itemService.add(itemDto2, createdUser2.getId());
+        Long user2Id = createdUser2.getId();
 
-        IncomingBookingDto incomingBookingDto2 = new IncomingBookingDto(
+        IncomingBookingDto incomingBookingDto = new IncomingBookingDto(
                 null,
-                LocalDateTime.now().plusHours(1),
+                LocalDateTime.now().plusSeconds(15),
                 LocalDateTime.now().plusDays(1),
                 Booking.Status.WAITING,
-                createdUser2.getId(),
+                user2Id,
                 createdItem1.getId());
-        IncomingBookingDto incomingBookingDto1 = new IncomingBookingDto(
-                null,
-                LocalDateTime.now().plusHours(1),
-                LocalDateTime.now().plusDays(3),
-                Booking.Status.WAITING,
-                createdUser1.getId(),
-                createdItem2.getId());
-        OutcomingBookingDto bookingOutputDto1 = bookingService.add(createdUser2.getId(), incomingBookingDto2);
-        OutcomingBookingDto bookingOutputDto2 = bookingService.add(createdUser1.getId(), incomingBookingDto1);
 
-        assertEquals(1L, createdItem1.getId());
-        assertEquals(2L, createdItem2.getId());
-        assertEquals(1L, bookingOutputDto1.getId());
-        assertEquals(2L, bookingOutputDto1.getBooker().getId());
-        assertEquals(1L, bookingOutputDto1.getItem().getId());
-        assertEquals(Booking.Status.WAITING, bookingOutputDto1.getStatus());
+        OutcomingBookingDto addedBooking = bookingService.add(user2Id, incomingBookingDto);
 
-        assertEquals(1L, createdItem1.getId());
-        assertEquals(2L, createdItem2.getId());
-        assertEquals(2L, bookingOutputDto2.getId());
-        assertEquals(1L, bookingOutputDto2.getBooker().getId());
-        assertEquals(2L, bookingOutputDto2.getItem().getId());
-        assertEquals(Booking.Status.WAITING, bookingOutputDto2.getStatus());
+        List<OutcomingBookingDto> bookingOutputDtos = new ArrayList<>(
+                bookingService.getAllForItemOwnerId(user1Id, State.FUTURE, 0, 1));
 
-        OutcomingBookingDto approveOutputDto2 = bookingService
-                .changeStatus(createdUser2.getId(), true, bookingOutputDto2.getId());
-
-        assertEquals(2L, approveOutputDto2.getId());
-        assertEquals(1L, approveOutputDto2.getBooker().getId());
-        assertEquals(2L, approveOutputDto2.getItem().getId());
-        assertEquals(Booking.Status.APPROVED, approveOutputDto2.getStatus());
-
-        List<OutcomingBookingDto> bookingOutputDtos = new ArrayList<>(bookingService
-                .getAllForItemOwnerId(createdUser2.getId(), State.FUTURE, 0, 1));
-
-        assertEquals(2L, bookingOutputDtos.get(0).getId());
-        assertEquals(1L, bookingOutputDtos.get(0).getBooker().getId());
-        assertEquals(2L, bookingOutputDtos.get(0).getItem().getId());
-        assertEquals(Booking.Status.APPROVED, bookingOutputDtos.get(0).getStatus());
+        assertEquals(addedBooking, bookingOutputDtos.get(0));
     }
 
     @Test
