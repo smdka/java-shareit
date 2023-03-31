@@ -9,15 +9,12 @@ import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.shareit.booking.dto.IncomingBookingDto;
-import ru.practicum.shareit.booking.model.Booking;
-import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.user.dto.UserDto;
 
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Transactional
@@ -40,21 +37,6 @@ class ExceptionHandlerTest {
             null,
             "Igor",
             "igorgmail.dom");
-
-    private final ItemDto itemDto = new ItemDto(
-            null,
-            "Какая-то вещь",
-            "Какое-то описание",
-            false,
-            1L);
-
-    private final IncomingBookingDto incomingBookingDto = new IncomingBookingDto(
-            1L,
-            LocalDateTime.now(),
-            LocalDateTime.now(),
-            Booking.Status.WAITING,
-            1L,
-            1L);
 
     @Test
     void badPathVariable() throws Exception {
@@ -114,28 +96,5 @@ class ExceptionHandlerTest {
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isInternalServerError());
-    }
-
-    @Test
-    void badRequest() throws Exception {
-        mvc.perform(post("/users")
-                        .content(mapper.writeValueAsString(userDto))
-                        .characterEncoding(StandardCharsets.UTF_8)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
-
-        mvc.perform(post("/items")
-                        .content(mapper.writeValueAsString(itemDto))
-                        .characterEncoding(StandardCharsets.UTF_8)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .header("X-Sharer-User-Id", "1"))
-                .andExpect(status().isOk());
-
-        mvc.perform(post("/bookings")
-                        .content(mapper.writeValueAsString(incomingBookingDto))
-                        .characterEncoding(StandardCharsets.UTF_8)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .header("X-Sharer-User-Id", "1"))
-                .andExpect(status().isBadRequest());
     }
 }

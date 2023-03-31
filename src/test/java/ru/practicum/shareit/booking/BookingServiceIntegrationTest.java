@@ -128,10 +128,26 @@ class BookingServiceIntegrationTest {
     void getAllBookingsWithFutureStateByBooker() {
         UserDto createdUser1 = userService.add(userDto1);
         ItemDto createdItem1 = itemService.add(itemDto1, createdUser1.getId());
+
         UserDto createdUser2 = userService.add(userDto2);
         ItemDto createdItem2 = itemService.add(itemDto2, createdUser2.getId());
-        OutcomingBookingDto bookingOutputDto1 = bookingService.add(createdUser2.getId(), bookingInputDto1);
-        OutcomingBookingDto bookingOutputDto2 = bookingService.add(createdUser1.getId(), bookingInputDto2);
+
+        IncomingBookingDto incomingBookingDto2 = new IncomingBookingDto(
+                null,
+                LocalDateTime.now().plusHours(1),
+                LocalDateTime.now().plusDays(1),
+                Booking.Status.WAITING,
+                createdUser2.getId(),
+                createdItem1.getId());
+        IncomingBookingDto incomingBookingDto1 = new IncomingBookingDto(
+                null,
+                LocalDateTime.now().plusHours(1),
+                LocalDateTime.now().plusDays(3),
+                Booking.Status.WAITING,
+                createdUser1.getId(),
+                createdItem2.getId());
+        OutcomingBookingDto bookingOutputDto1 = bookingService.add(createdUser2.getId(), incomingBookingDto2);
+        OutcomingBookingDto bookingOutputDto2 = bookingService.add(createdUser1.getId(), incomingBookingDto1);
 
         assertEquals(1L, createdItem1.getId());
         assertEquals(2L, createdItem2.getId());
