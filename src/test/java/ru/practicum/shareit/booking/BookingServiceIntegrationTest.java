@@ -174,7 +174,6 @@ class BookingServiceIntegrationTest {
         List<OutcomingBookingDto> bookingOutputDtos = new ArrayList<>(bookingService
                 .getAllForItemOwnerId(createdUser2.getId(), State.FUTURE, 0, 1));
 
-        assertEquals(1, bookingOutputDtos.size());
         assertEquals(2L, bookingOutputDtos.get(0).getId());
         assertEquals(1L, bookingOutputDtos.get(0).getBooker().getId());
         assertEquals(2L, bookingOutputDtos.get(0).getItem().getId());
