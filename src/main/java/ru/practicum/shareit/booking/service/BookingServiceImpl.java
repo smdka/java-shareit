@@ -2,7 +2,6 @@ package ru.practicum.shareit.booking.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +18,7 @@ import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.exception.UserNotFoundException;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
+import ru.practicum.shareit.util.PageableUtil;
 
 import javax.validation.ValidationException;
 import java.util.Collection;
@@ -28,7 +28,6 @@ import java.util.Collection;
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class BookingServiceImpl implements BookingService {
-    private static final Sort SORT_BY_START = Sort.by(Sort.Direction.DESC, "start");
     private static final String USER_NOT_FOUND_MSG = "Пользователь с id = %d не найден";
     private static final String ITEM_NOT_AVAILABLE_MSG = "Предмет с id = %d не доступен";
     private static final String BOOKING_NOT_FOUND_MSG = "Бронирование с id = %d не найдено";
@@ -141,13 +140,13 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public Collection<OutcomingBookingDto> getAllByUserId(Long userId, State state, Integer from, Integer size) {
         ifUserDoesntExistThrow(userId);
-        return BookingMapper.toOutcomingDtoAll(bookingsGetter.forUser(userId, state, PageRequest.of(from / size, size, SORT_BY_START)));
+        return BookingMapper.toOutcomingDtoAll(bookingsGetter.forUser(userId, state, PageableUtil.getPageRequestSortByStart(from, size)));
     }
 
     @Override
     public Collection<OutcomingBookingDto> getAllForItemOwnerId(Long itemOwnerId, State state, Integer from, Integer size) {
         ifUserDoesntExistThrow(itemOwnerId);
         Collection<Long> itemIds = itemRepository.findIdsByOwnerId(itemOwnerId);
-        return BookingMapper.toOutcomingDtoAll(bookingsGetter.forItemOwner(itemIds, state, PageRequest.of(from, size, SORT_BY_START)));
+        return BookingMapper.toOutcomingDtoAll(bookingsGetter.forItemOwner(itemIds, state, PageableUtil.getPageRequestSortByStart(from, size)));
     }
 }

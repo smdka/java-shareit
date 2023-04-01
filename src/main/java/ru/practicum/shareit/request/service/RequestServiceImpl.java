@@ -2,7 +2,6 @@ package ru.practicum.shareit.request.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
@@ -10,6 +9,7 @@ import ru.practicum.shareit.request.dto.RequestMapper;
 import ru.practicum.shareit.request.exception.RequestNotFoundException;
 import ru.practicum.shareit.request.repository.RequestRepository;
 import ru.practicum.shareit.user.UserChecker;
+import ru.practicum.shareit.util.PageableUtil;
 
 import java.util.List;
 
@@ -38,7 +38,7 @@ public class RequestServiceImpl implements RequestService {
     @Override
     public List<ItemRequestDto> getByUserId(Long userId, Integer from, Integer size) {
         return userChecker.getIfExists(userId,
-                () -> RequestMapper.toDtoAll(requestRepository.findByRequesterIdNotOrderByCreatedAsc(userId, PageRequest.of(from, size))));
+                () -> RequestMapper.toDtoAll(requestRepository.findByRequesterIdNotOrderByCreatedAsc(userId, PageableUtil.getPageRequest(from, size))));
     }
 
     @Override

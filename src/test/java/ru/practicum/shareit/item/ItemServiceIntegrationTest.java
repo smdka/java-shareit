@@ -4,8 +4,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.exception.ItemNotFoundException;
 import ru.practicum.shareit.item.exception.UserHasNoPermissionException;
@@ -20,7 +18,6 @@ import java.util.Collections;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-@Transactional
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 class ItemServiceIntegrationTest {
@@ -46,13 +43,6 @@ class ItemServiceIntegrationTest {
             true,
             1L);
 
-    private final ItemDto itemDto2 = new ItemDto(
-            null,
-            "Какая-то вещь",
-            "Какое-то описание",
-            true,
-            2L);
-
     private final UserDto userDto2 = new UserDto(
             null,
             "Stas",
@@ -70,12 +60,6 @@ class ItemServiceIntegrationTest {
             "Какой-то запрос",
             null,
             Collections.emptyList());
-
-    private final CommentDto commentDto = new CommentDto(
-            null,
-            "Коммент",
-            null,
-            null);
 
     @Test
     void createItem() {

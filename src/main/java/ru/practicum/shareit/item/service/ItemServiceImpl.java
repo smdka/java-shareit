@@ -23,6 +23,7 @@ import ru.practicum.shareit.user.UserChecker;
 import ru.practicum.shareit.user.exception.UserNotFoundException;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
+import ru.practicum.shareit.util.PageableUtil;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -118,7 +119,7 @@ public class ItemServiceImpl implements ItemService {
     public Collection<ItemDto> searchInNameOrDescription(String text, Integer from, Integer size) {
         return text.isBlank() ?
                 Collections.emptyList() :
-                ItemMapper.toItemDtoAll(itemRepository.search(text, PageRequest.of(from / size, size)));
+                ItemMapper.toItemDtoAll(itemRepository.search(text, PageableUtil.getPageRequest(from, size)));
     }
 
     @Override
