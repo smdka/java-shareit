@@ -32,6 +32,6 @@ class UserServiceIntegrationTest {
 
     @Test
     void getUserByWrongId() {
-        assertThrows(UserNotFoundException.class, () -> userService.getById(2L));
+        assertThrows(UserNotFoundException.class, () -> userService.getById(999L));
     }
 }

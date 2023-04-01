@@ -39,14 +39,14 @@ class RequestServiceIntegrationTest {
     @Test
     void createRequest() {
         UserDto createdUser = userService.add(userDto);
-        requestService.add(requestDto.getDescription(), createdUser.getId());
+        ItemRequestDto addedRequest = requestService.add(requestDto.getDescription(), createdUser.getId());
 
         List<ItemRequestDto> requestDtos = requestService.getByRequesterId(createdUser.getId());
 
         assertEquals(1, requestDtos.size());
-        assertEquals(1L, requestDtos.get(0).getId());
+        assertEquals(addedRequest.getId(), requestDtos.get(0).getId());
         assertEquals(requestDto.getDescription(), requestDtos.get(0).getDescription());
-        assertEquals(0, requestDtos.get(0).getItems().size());
+        assertEquals(addedRequest.getItems().size(), requestDtos.get(0).getItems().size());
     }
 
     @Test
