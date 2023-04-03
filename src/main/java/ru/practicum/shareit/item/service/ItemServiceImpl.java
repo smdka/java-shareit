@@ -2,29 +2,32 @@ package ru.practicum.shareit.item.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.model.Booking;
-import ru.practicum.shareit.booking.service.State;
 import ru.practicum.shareit.booking.service.BookingsGetter;
+import ru.practicum.shareit.booking.service.State;
 import ru.practicum.shareit.item.dto.*;
 import ru.practicum.shareit.item.exception.ItemNotFoundException;
 import ru.practicum.shareit.item.exception.UserHasNoPermissionException;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.user.UserChecker;
 import ru.practicum.shareit.user.exception.UserNotFoundException;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
+import ru.practicum.shareit.util.PageableUtil;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import static java.util.Comparator.*;
+import static java.util.Comparator.comparing;
 
 @Slf4j
 @Service
@@ -38,6 +41,7 @@ public class ItemServiceImpl implements ItemService {
     private final UserRepository userRepository;
     private final BookingsGetter bookingsGetter;
     private final CommentRepository commentRepository;
+    private final UserChecker userChecker;
 
     @Override
     @Transactional
@@ -45,19 +49,12 @@ public class ItemServiceImpl implements ItemService {
         User user = userRepository.findById(ownerId)
                 .orElseThrow(() -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, ownerId)));
         Item item = ItemMapper.toItem(itemDto, user);
-        return ItemMapper.toItemDto(getIfUserExists(ownerId, () -> itemRepository.save(item)));
-    }
-
-    private <T> T getIfUserExists(long userId, Supplier<T> s) {
-        if (userRepository.existsById(userId)) {
-            return s.get();
-        }
-        throw new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, userId));
+        return ItemMapper.toItemDto(userChecker.getIfExists(ownerId, () -> itemRepository.save(item)));
     }
 
     @Transactional
     public ItemDto updateById(Long itemId, ItemDto itemWithUpdates, Long ownerId) {
-        Item currItem = getIfUserExists(ownerId, () -> itemRepository.findById(itemId)
+        Item currItem = userChecker.getIfExists(ownerId, () -> itemRepository.findById(itemId)
                 .orElseThrow(() -> new ItemNotFoundException(String.format(ITEM_NOT_FOUND_MSG, itemId))));
 
         checkForUserPermissionOrThrowException(ownerId, currItem);
@@ -89,15 +86,15 @@ public class ItemServiceImpl implements ItemService {
     }
 
     private Booking getLastBooking(long itemId) {
-        return bookingsGetter.forItemOwner(List.of(itemId), State.ALL).stream()
+        return bookingsGetter.forItemOwner(List.of(itemId), State.ALL, Pageable.unpaged()).stream()
                 .filter(booking -> (!Booking.Status.REJECTED.equals(booking.getStatus())) &&
-                        booking.getEnd().isBefore(LocalDateTime.now()))
-                .min(comparing(Booking::getStart))
+                        booking.getStart().isBefore(LocalDateTime.now()))
+                .max(comparing(Booking::getEnd))
                 .orElse(null);
     }
 
     private Booking getNextBooking(long itemId) {
-        return bookingsGetter.forItemOwner(List.of(itemId), State.ALL).stream()
+        return bookingsGetter.forItemOwner(List.of(itemId), State.ALL, Pageable.unpaged()).stream()
                 .filter(booking -> (!Booking.Status.REJECTED.equals(booking.getStatus())) &&
                         booking.getStart().isAfter(LocalDateTime.now()))
                 .min(comparing(Booking::getStart))
@@ -106,18 +103,19 @@ public class ItemServiceImpl implements ItemService {
 
 
     @Override
-    public Collection<OutcomingItemDto> getByUserId(long userId) {
-        Collection<Item> items = getIfUserExists(userId, () -> itemRepository.findItemsByOwnerId(userId));
+    public Collection<OutcomingItemDto> getByUserId(long userId, Integer from, Integer size) {
+        Collection<Item> items = userChecker.getIfExists(userId,
+                () -> itemRepository.findByOwnerIdOrderByIdAsc(userId, PageRequest.of(from / size, size)));
         return items.stream()
                 .map(item -> ItemMapper.toOutputItemDto(item, getLastBooking(item.getId()), getNextBooking(item.getId())))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public Collection<ItemDto> searchInNameOrDescription(String text) {
+    public Collection<ItemDto> searchInNameOrDescription(String text, Integer from, Integer size) {
         return text.isBlank() ?
                 Collections.emptyList() :
-                ItemMapper.toItemDtoAll(itemRepository.search(text));
+                ItemMapper.toItemDtoAll(itemRepository.search(text, PageableUtil.getPageRequest(from, size)));
     }
 
     @Override
@@ -127,7 +125,7 @@ public class ItemServiceImpl implements ItemService {
                 .orElseThrow(() -> new UserNotFoundException(String.format(USER_NOT_FOUND_MSG, authorId)));
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new ItemNotFoundException(String.format(ITEM_NOT_FOUND_MSG, itemId)));
-        Collection<Booking> bookings = bookingsGetter.forUser(authorId, State.PAST);
+        Collection<Booking> bookings = bookingsGetter.forUser(authorId, State.PAST, Pageable.unpaged());
 
         ifNotBookingAuthorThrowNoPermissionException(itemId, bookings);
 

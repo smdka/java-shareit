@@ -38,6 +38,7 @@ public class UserServiceImpl implements UserService {
         ifNotSameEmailsOrEmailExistsThrowException(patchedUser, currUser);
 
         updateFromDto(currUser, patchedUser);
+
         userRepository.save(currUser);
         return UserMapper.toUserDto(currUser);
     }

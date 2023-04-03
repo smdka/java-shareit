@@ -2,6 +2,7 @@ package ru.practicum.shareit.booking.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,14 +14,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import ru.practicum.shareit.booking.dto.IncomingBookingDto;
 import ru.practicum.shareit.booking.dto.OutcomingBookingDto;
-import ru.practicum.shareit.booking.service.State;
 import ru.practicum.shareit.booking.service.BookingService;
+import ru.practicum.shareit.booking.service.State;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import java.util.Collection;
 
 @Slf4j
+@Validated
 @RestController
 @RequestMapping(path = "/bookings")
 @RequiredArgsConstructor
@@ -28,16 +31,16 @@ public class BookingController {
     private final BookingService bookingService;
 
     @PostMapping
-    public OutcomingBookingDto postBooking(@NotNull @RequestHeader("X-Sharer-User-Id") Long bookerId,
-                                           @Valid @RequestBody IncomingBookingDto incomingBookingDto) {
+    public OutcomingBookingDto post(@NotNull @RequestHeader("X-Sharer-User-Id") Long bookerId,
+                                    @Valid @RequestBody IncomingBookingDto incomingBookingDto) {
         log.info("Получен запрос POST /bookings с заголовком X-Sharer-User-Id = {}", bookerId);
         return bookingService.add(bookerId, incomingBookingDto);
     }
 
     @PatchMapping("/{bookingId}")
-    public OutcomingBookingDto patchBooking(@PathVariable Long bookingId,
-                                            @RequestParam Boolean approved,
-                                            @NotNull @RequestHeader("X-Sharer-User-Id") Long userId) {
+    public OutcomingBookingDto patch(@PathVariable Long bookingId,
+                                     @RequestParam Boolean approved,
+                                     @NotNull @RequestHeader("X-Sharer-User-Id") Long userId) {
         log.info("Получен запрос PATCH /bookings/{}?approved={} с заголовком X-Sharer-User-Id = {}",
                 bookingId, approved, userId);
         return bookingService.changeStatus(bookingId, approved, userId);
@@ -52,19 +55,23 @@ public class BookingController {
 
     @GetMapping
     public Collection<OutcomingBookingDto> getBookingsForUser(@NotNull @RequestHeader("X-Sharer-User-Id") Long userId,
+                                                              @RequestParam(defaultValue = "0") @Min(0) Integer from,
+                                                              @RequestParam(defaultValue = "10") @Min(1) Integer size,
                                                               @RequestParam(defaultValue = "ALL") String state) {
-        log.info("Получен запрос GET /bookings?state={} с заголовком X-Sharer-User-Id = {}", state, userId);
+        log.info("Получен запрос GET /bookings?state={}&from={}&size={} с заголовком X-Sharer-User-Id = {}", state, from, size, userId);
         State stateValue;
         try {
             stateValue = State.valueOf(state);
         } catch (IllegalArgumentException e) {
             throw new IllegalStateException("Unknown state: " + state);
         }
-        return bookingService.getAllByUserId(userId, stateValue);
+        return bookingService.getAllByUserId(userId, stateValue, from, size);
     }
 
     @GetMapping("/owner")
     public Collection<OutcomingBookingDto> getBookingsForItemOwner(@NotNull @RequestHeader("X-Sharer-User-Id") Long itemOwnerId,
+                                                                   @RequestParam(defaultValue = "0") @Min(0) Integer from,
+                                                                   @RequestParam(defaultValue = "10") @Min(1) Integer size,
                                                                    @RequestParam(defaultValue = "ALL") String state) {
         log.info("Получен запрос GET /bookings/owner?state={} с заголовком X-Sharer-User-Id = {}", state, itemOwnerId);
         State stateValue;
@@ -73,6 +80,6 @@ public class BookingController {
         } catch (IllegalArgumentException e) {
             throw new IllegalStateException("Unknown state: " + state);
         }
-        return bookingService.getAllForItemOwnerId(itemOwnerId, stateValue);
+        return bookingService.getAllForItemOwnerId(itemOwnerId, stateValue, from, size);
     }
 }

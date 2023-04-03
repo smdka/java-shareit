@@ -15,10 +15,10 @@ public final class ItemMapper {
     }
 
     public static ItemDto toItemDto(Item item) {
-        return new ItemDto(item.getId(), item.getName(), item.getDescription(), item.getAvailable());
+        return new ItemDto(item.getId(), item.getName(), item.getDescription(), item.getAvailable(), item.getRequestId());
     }
 
-    public static Collection<ItemDto> toItemDtoAll(Collection<? extends Item> items) {
+    public static List<ItemDto> toItemDtoAll(Collection<? extends Item> items) {
         return items.stream()
                 .map(ItemMapper::toItemDto)
                 .collect(toList());
@@ -31,6 +31,7 @@ public final class ItemMapper {
         item.setDescription(itemDto.getDescription());
         item.setAvailable(itemDto.getAvailable());
         item.setOwner(owner);
+        item.setRequestId(itemDto.getRequestId());
         return item;
     }
 
