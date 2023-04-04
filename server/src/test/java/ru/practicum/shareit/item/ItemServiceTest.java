@@ -6,16 +6,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Pageable;
-import ru.practicum.shareit.booking.dto.OutcomingBookingDto;
 import ru.practicum.shareit.booking.model.Booking;
-import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.booking.service.BookingsGetter;
 import ru.practicum.shareit.booking.service.State;
-import ru.practicum.shareit.item.dto.CommentDto;
-import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.dto.ItemDtoForBooking;
-import ru.practicum.shareit.item.dto.ItemMapper;
-import ru.practicum.shareit.item.dto.OutcomingItemDto;
+import ru.practicum.shareit.item.dto.*;
 import ru.practicum.shareit.item.exception.ItemNotFoundException;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
@@ -48,9 +42,6 @@ class ItemServiceTest {
 
     @Mock
     private CommentRepository commentRepository;
-
-    @Mock
-    private BookingRepository bookingRepository;
 
     @Mock
     private UserRepository userRepository;
@@ -112,15 +103,6 @@ class ItemServiceTest {
             item,
             user,
             Booking.Status.WAITING);
-
-    private final OutcomingBookingDto bookingOutputDto = new OutcomingBookingDto(
-            1L,
-            LocalDateTime.now(),
-            LocalDateTime.now(),
-            Booking.Status.WAITING,
-            userDtoForBooking,
-            itemDtoForBooking);
-
 
     @Test
     void addItem() {
