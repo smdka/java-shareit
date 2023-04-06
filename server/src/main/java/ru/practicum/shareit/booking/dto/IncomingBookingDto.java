@@ -8,9 +8,7 @@ import java.time.LocalDateTime;
 @Value
 public class IncomingBookingDto {
     Long id;
-
     LocalDateTime start;
-
     LocalDateTime end;
     Booking.Status status;
     Long bookerId;

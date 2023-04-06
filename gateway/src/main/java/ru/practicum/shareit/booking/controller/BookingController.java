@@ -10,6 +10,7 @@ import ru.practicum.shareit.booking.State;
 import ru.practicum.shareit.booking.client.BookingClient;
 import ru.practicum.shareit.booking.dto.IncomingBookingDto;
 
+import javax.validation.Valid;
 import javax.validation.constraints.Min;
 
 
@@ -23,7 +24,7 @@ public class BookingController {
 
     @PostMapping
     public ResponseEntity<Object> post(@RequestHeader("X-Sharer-User-Id") Long bookerId,
-                                       @RequestBody IncomingBookingDto incomingBookingDto) {
+                                       @Valid @RequestBody IncomingBookingDto incomingBookingDto) {
         log.info("Получен запрос POST /bookings с заголовком X-Sharer-User-Id = {}", bookerId);
         return bookingClient.add(bookerId, incomingBookingDto);
     }
@@ -54,6 +55,7 @@ public class BookingController {
         try {
             stateValue = State.valueOf(state);
         } catch (IllegalArgumentException e) {
+            log.info("Неподдерживаемый State: {}", state);
             throw new IllegalStateException("Unknown state: " + state);
         }
         return bookingClient.getBookingsByUserId(userId, stateValue, from, size);
@@ -64,11 +66,12 @@ public class BookingController {
                                                           @RequestParam(defaultValue = "0") @Min(0) Integer from,
                                                           @RequestParam(defaultValue = "10") @Min(1) Integer size,
                                                           @RequestParam(defaultValue = "ALL") String state) {
-        log.info("Получен запрос GET /bookings/owner?state={} с заголовком X-Sharer-User-Id = {}", state, itemOwnerId);
+        log.info("Получен запрос GET /bookings/owner?state={}&from={}&size={} с заголовком X-Sharer-User-Id = {}", state, from, size, itemOwnerId);
         State stateValue;
         try {
             stateValue = State.valueOf(state);
         } catch (IllegalArgumentException e) {
+            log.info("Неподдерживаемый State: {}", state);
             throw new IllegalStateException("Unknown state: " + state);
         }
         return bookingClient.getBookingsByItemOwnerId(itemOwnerId, stateValue, from, size);

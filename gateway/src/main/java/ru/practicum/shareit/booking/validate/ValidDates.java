@@ -10,7 +10,6 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ValidDates {
     String message() default "Неверные даты начала и конца бронирования";
-
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};
 }
