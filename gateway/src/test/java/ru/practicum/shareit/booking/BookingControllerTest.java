@@ -1,7 +1,10 @@
 package ru.practicum.shareit.booking;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -24,6 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class BookingControllerTest {
     @Autowired
     private ObjectMapper mapper;
@@ -56,6 +60,7 @@ class BookingControllerTest {
             1L);
 
     @Test
+    @Order(1)
     void getAllByUserIdWithWrongState() throws Exception {
         mvc.perform(get("/bookings")
                         .content(mapper.writeValueAsString(incomingBookingDto))
@@ -70,9 +75,10 @@ class BookingControllerTest {
     }
 
     @Test
-    void addBookingWithEndBeforeStart() throws Exception {
+    @Order(2)
+    void addBookingWithStartEqualsEnd() throws Exception {
         mvc.perform(post("/bookings")
-                        .content(mapper.writeValueAsString(incomingBookingDtoWithWrongEnd))
+                        .content(mapper.writeValueAsString(incomingBookingDtoWithStartEqualsEnd))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("X-Sharer-User-Id", "1"))
@@ -80,9 +86,10 @@ class BookingControllerTest {
     }
 
     @Test
-    void addBookingWithStartEqualsEnd() throws Exception {
+    @Order(3)
+    void addBookingWithEndBeforeStart() throws Exception {
         mvc.perform(post("/bookings")
-                        .content(mapper.writeValueAsString(incomingBookingDtoWithStartEqualsEnd))
+                        .content(mapper.writeValueAsString(incomingBookingDtoWithWrongEnd))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("X-Sharer-User-Id", "1"))
