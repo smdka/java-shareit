@@ -1,7 +1,6 @@
 package ru.practicum.shareit.booking.dto;
 
 import lombok.Value;
-import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.validate.ValidDates;
 
 import javax.validation.constraints.Future;
@@ -19,7 +18,7 @@ public class IncomingBookingDto {
     @Future
     LocalDateTime end;
 
-    Booking.Status status;
+    Status status;
     Long bookerId;
     Long itemId;
 }

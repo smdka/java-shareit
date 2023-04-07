@@ -1,7 +1,5 @@
-package ru.practicum.shareit.booking.model;
+package ru.practicum.shareit.booking.dto;
 
-public class Booking {
     public enum Status {
         WAITING, APPROVED, REJECTED, CANCELED
     }
-}

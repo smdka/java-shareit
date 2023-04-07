@@ -1,8 +1,10 @@
 package ru.practicum.shareit.item.dto;
 
-import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.Value;
 
-@Data
+@Value
+@NoArgsConstructor(force = true)
 public class IncomingCommentDto {
-    private String text;
+    String text;
 }

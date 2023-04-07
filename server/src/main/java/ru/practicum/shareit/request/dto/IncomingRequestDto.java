@@ -1,8 +1,10 @@
 package ru.practicum.shareit.request.dto;
 
-import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.Value;
 
-@Data
+@Value
+@NoArgsConstructor(force = true)
 public class IncomingRequestDto {
     String description;
 }
