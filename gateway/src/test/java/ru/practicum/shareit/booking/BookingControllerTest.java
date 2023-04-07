@@ -1,10 +1,7 @@
 package ru.practicum.shareit.booking;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.MethodOrderer;
-import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -27,7 +24,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class BookingControllerTest {
     @Autowired
     private ObjectMapper mapper;
@@ -35,32 +31,33 @@ class BookingControllerTest {
     @Autowired
     private MockMvc mvc;
 
+    private final LocalDateTime start = LocalDateTime.now().plusHours(1);
+
     private final IncomingBookingDto incomingBookingDto = new IncomingBookingDto(
             1L,
-            LocalDateTime.now().plusHours(1),
-            LocalDateTime.now().plusDays(1),
+            start,
+            start.plusDays(1),
             Status.WAITING,
             1L,
             1L);
 
     private final IncomingBookingDto incomingBookingDtoWithWrongEnd = new IncomingBookingDto(
             1L,
-            LocalDateTime.now().plusHours(1),
-            LocalDateTime.now().minusDays(1),
+            start,
+            start.minusDays(1),
             Status.WAITING,
             1L,
             1L);
 
     private final IncomingBookingDto incomingBookingDtoWithStartEqualsEnd = new IncomingBookingDto(
             1L,
-            LocalDateTime.now().plusHours(1),
-            LocalDateTime.now().plusHours(1),
+            start,
+            start,
             Status.WAITING,
             1L,
             1L);
 
     @Test
-    @Order(1)
     void getAllByUserIdWithWrongState() throws Exception {
         mvc.perform(get("/bookings")
                         .content(mapper.writeValueAsString(incomingBookingDto))
@@ -75,7 +72,6 @@ class BookingControllerTest {
     }
 
     @Test
-    @Order(2)
     void addBookingWithStartEqualsEnd() throws Exception {
         mvc.perform(post("/bookings")
                         .content(mapper.writeValueAsString(incomingBookingDtoWithStartEqualsEnd))
@@ -86,7 +82,6 @@ class BookingControllerTest {
     }
 
     @Test
-    @Order(3)
     void addBookingWithEndBeforeStart() throws Exception {
         mvc.perform(post("/bookings")
                         .content(mapper.writeValueAsString(incomingBookingDtoWithWrongEnd))
